@@ -1,18 +1,34 @@
 <template>
-  <div id="container">
-
+  <div id="container" class="paper">
+    <svg height="1000" version="1.1" width="1000" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="paper">
+      <defs>
+        <marker id="markerArrow" orient="auto" overflow="visible" markerUnits="userSpaceOnUse">
+          <path stroke="none" fill="#8f8f8f" transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
+        </marker>
+      </defs>
+      <g v-for="item in nodes" :key="item.id" class="pointer">
+        <rect :width="nodeWidth" :height="nodeHeight" :x="item.x" :y="item.y" rx="2" ry="2" stroke="rgb(49, 208, 198)" stroke-width="2" fill="transparent" stroke-dasharray="0" />
+        <text :x="item.x+nodeWidth/2" :y="item.y+nodeHeight/2" fill="rgb(49, 208, 198)" text-anchor="middle" font-size="12" stroke-width="0">
+          {{item.text}}
+        </text>
+      </g>
+      <g v-for="item in lines" :key="item.text" class="pointer">
+        {{ lineData = getLineInfo(item)}}
+        <path :d="lineData.path" fill="none" stroke="transparent" stroke-width="10" />
+        <path :d="lineData.path" fill="none" stroke="#8f8f8f" stroke-width="2" marker-end="url(#markerArrow)" />
+        <text :x="lineData.textx" :y="lineData.texty" fill="#8f8f8f" text-anchor="middle" font-size="12" stroke-width="0">
+          {{item.text}}
+        </text>
+      </g>
+    </svg>
   </div>
 </template>
 <script>
-import Raphael from 'raphael';
-
-const nodeWidth = 100;
-const nodeHeight = 50;
-
 export default {
-  name: 'flow-designer',
   data() {
     return {
+      nodeWidth: 100,
+      nodeHeight: 50,
       nodes: [
         {
           id: '1',
@@ -66,30 +82,14 @@ export default {
           text: '经理到董事长',
         },
       ],
-      paper: {},
     };
   },
-  mounted() {
-    this.paper = new Raphael('container', 1000, 600);
-    this.nodes.forEach(node => this.renderNode(node));
-    this.lines.forEach(line => this.renderLine(line));
-  },
   methods: {
-    renderNode(node) {
-      this.paper
-        .text(node.x + nodeWidth / 2, node.y + nodeHeight / 2, node.text)
-        .attr({
-          fill: 'red',
-          cursor: 'point',
-        });
-      this.paper.rect(node.x, node.y, nodeWidth, nodeHeight, 10).attr({
-        cursor: 'point',
-      });
-    },
-    renderLine(line) {
+    getLineInfo(line) {
       let fromNode = this.nodes.find(r => r.id == line.from);
       let toNode = this.nodes.find(r => r.id == line.to);
-
+      let nodeWidth = this.nodeWidth;
+      let nodeHeight = this.nodeHeight;
       let fromPoints = [
         {x: fromNode.x + nodeWidth / 2, y: fromNode.y},
         {x: fromNode.x + nodeWidth / 2, y: fromNode.y + nodeHeight},
@@ -128,22 +128,21 @@ export default {
       let toy = toPoints[result.toIndex].y;
       let textx = (tox + fromx) / 2;
       let texty = (toy + fromy) / 2;
-      this.paper.text(textx, texty, line.text).attr({
-        fill: 'red',
-      });
-      this.paper.path(`M${fromx} ${fromy}L${tox} ${toy}`).attr({
-        'arrow-end': 'classic-wide-long',
-        stroke: 'red',
-        'stroke-width': 2,
-      });
+      return {
+        path: `M${fromx} ${fromy}L${tox} ${toy}`,
+        textx,
+        texty,
+      };
     },
   },
 };
 </script>
 <style scoped>
-#container {
+.paper {
   width: 1000px;
-  height: 600px;
-  border: 1px solid red;
+  height: 1000px;
+}
+.pointer {
+  cursor: pointer;
 }
 </style>
