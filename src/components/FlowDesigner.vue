@@ -151,6 +151,7 @@ export default {
       };
     },
     beginDrag(ev) {
+      // 开始拖动 记录拖动数据
       var id = ev.target.parentNode.id;
       this.dragData.nodeid = id;
       this.sourceMouseX = ev.screenX;
@@ -159,17 +160,21 @@ export default {
     },
     moving(ev) {
       if (!this.dragData.nodeid) return;
+      // 鼠标偏移量
       var offsetX = ev.screenX - this.sourceMouseX;
       var offsetY = ev.screenY - this.sourceMouseY;
+      // 拖动范围小于5 不处理
       if (Math.abs(offsetX) + Math.abs(offsetY) < 5) return;
       var node = this.nodes.find(r => r.id == this.dragData.nodeid);
       if (!node) return;
       node.x += offsetX;
       node.y += offsetY;
+      // 重置鼠标位置
       this.sourceMouseX = ev.screenX;
       this.sourceMouseY = ev.screenY;
     },
     drop(ev) {
+      // 拖动完成 情况拖动数据
       this.dragData = {};
     }
   }
