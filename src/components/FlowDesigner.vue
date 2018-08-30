@@ -96,7 +96,7 @@ export default {
   },
   mounted() {
     // 拖动时取消选择文本
-    document.onselectstart = function() {
+    document.getElementById("container").onselectstart = function() {
       return false;
     };
   },
