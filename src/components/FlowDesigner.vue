@@ -3,6 +3,7 @@
     <div id="toolbar" style="text-align:left">
       <button type="button" @click="mode='select'">选择</button>
       <button type="button" @click="mode='connect'">连接</button>
+      {{connectLine.nodeId}}-{{connectLine.path}}
     </div>
     <div id="container" :style="{width:paperWidth+'px',height:paperHeight+'px',position:'relative'}">
       <div :style="{width:paperWidth+'px',height:paperHeight+'px'}" class="backgroud">
@@ -27,7 +28,7 @@
             {{item.text}}
           </text>
         </g>
-        <path :d="connectLine.path" v-if="connectLine.path" fill="none" stroke="#8f8f8f" stroke-width="2" marker-end="url(#markerArrow)" />
+        <path :d="connectLine.path" v-if="connectLine.nodeId" fill="none" stroke="#8f8f8f" stroke-width="2" marker-end="url(#markerArrow)" />
       </svg>
     </div>
   </div>
@@ -242,9 +243,14 @@ export default {
         },
         // 连接完成
         connectDrop(ev) {
-            if (this.mode == "connect") {
-                var targetNode = this.getMousePointNode(ev);
-                if (targetNode) {
+            var targetNode = this.getMousePointNode(ev);
+            if (targetNode) {
+                var exists = this.lines.some(
+                    r =>
+                        r.from == this.connectLine.nodeId &&
+                        r.to == targetNode.id
+                );
+                if (!exists) {
                     this.lines.push({
                         id: Math.random().toString(),
                         from: this.connectLine.nodeId,
@@ -252,8 +258,11 @@ export default {
                         text: ""
                     });
                 }
-                this.connectLine = {};
             }
+            this.connectLine = {
+                path: null,
+                nodeId: null
+            };
         },
         // 节点双击事件
         nodeDblClient(node) {
