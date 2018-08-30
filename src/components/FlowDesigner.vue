@@ -1,10 +1,7 @@
 <template>
     <div>
         <div id="toolbar" style="text-align:left">
-            <button type="button" @click="mode='select'">选择</button>
-            <button type="button" @click="mode='connect'">连接</button>
-            <span>|</span>
-            <button type="button" @click="mode='delete'">删除</button>
+            <button type="button">删除</button>
         </div>
         <div id="container">
             <div :style="{width:paperWidth+'px',height:paperHeight+'px'}" class="backgroud">
@@ -18,21 +15,24 @@
                         <path stroke="none" class='select' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
                     </marker>
                 </defs>
-                <g v-for="item in nodes" :key="'node'+item.id" :id="item.id" class="pointer" @dblclick="nodeDblClick(item)" @mousedown="beginMove($event)" @click="select('node',item.id)" :class="{select:currentSelect.type=='node'&&currentSelect.id==item.id,unselect:currentSelect.type!='node'||currentSelect.id!=item.id}">
+                <g>
+                    <circle cx="100" cy="50" r="5" stroke="black" stroke-width="2" fill="red" />
+                </g>
+                <g v-for="item in nodes" :key="'node'+item.id" :nodeid="item.id" class="pointer" :class="{select:tempData.currentSelect.id==item.id,unselect:tempData.currentSelect.id!=item.id}" @dblclick="nodeDblClick(item)" @mousedown="beginMove($event)" @click="select('node',item.id)">
                     <rect :width="nodeWidth" :height="nodeHeight" :x="item.x" :y="item.y" rx="2" ry="2" stroke-width="2" fill="transparent" stroke-dasharray="0" />
                     <text :x="item.x+nodeWidth/2" :y="item.y+nodeHeight/2" text-anchor="middle" font-size="12" stroke-width="0">
                         {{item.text}}
                     </text>
                 </g>
-                <g v-for="item in lines" :key="'line'+item.id" class="pointer" @dblclick="lineDblClick(item)" @click="select('line',item.id)" :class="{select:currentSelect.type=='line'&&currentSelect.id==item.id,unselect:currentSelect.type!='line'||currentSelect.id!=item.id}">
+                <g v-for="item in lines" :key="'line'+item.id" class="pointer" :class="{select:tempData.currentSelect.id==item.id,unselect:tempData.currentSelect.id!=item.id}" @dblclick="lineDblClick(item)" @click="select('line',item.id)">
                     {{ lineData = getLineInfo(item)}}
                     <path :d="lineData.path" fill="none" stroke="transparent" stroke-width="10" />
-                    <path :d="lineData.path" fill="none" stroke-width="2" :marker-end="currentSelect.type=='line'&&currentSelect.id==item.id?'url(#arrow-select)':'url(#arrow-unselect)'" />
+                    <path :d="lineData.path" fill="none" stroke-width="2" />
                     <text :x="lineData.textx" :y="lineData.texty" text-anchor="middle" font-size="12" stroke-width="0">
                         {{item.text}}
                     </text>
                 </g>
-                <path :d="connectLine.path" v-if="connectLine.nodeId" fill="none" stroke="#8f8f8f" stroke-width="2" marker-end="url(#markerArrow)" />
+                <path :d="tempData.connectLine.path" v-if="tempData.connectLine.nodeId" fill="none" stroke="#8f8f8f" stroke-width="2" marker-end="url(#markerArrow)" />
             </svg>
         </div>
     </div>
@@ -41,26 +41,29 @@
 export default {
     data() {
         return {
+            tempData: {
+                dragData: {
+                    nodeid: null,
+                    sourceMouseX: null,
+                    sourceMouseY: null,
+                },
+                // 正在连接的连接线
+                connectLine: {
+                    path: null,
+                    nodeId: null,
+                },
+                // 当前已选择的对象
+                currentSelect: {
+                    type: null,
+                    id: null,
+                },
+                // 是否正在使用连接线
+                isConnecting: false,
+            },
             paperWidth: 1000,
             paperHeight: 600,
             nodeWidth: 100,
             nodeHeight: 50,
-            mode: 'select',
-            dragData: {
-                nodeid: null,
-                sourceMouseX: null,
-                sourceMouseY: null,
-            },
-            // 正在连接的连接线
-            connectLine: {
-                path: null,
-                nodeId: null,
-            },
-            // 当前已选择的对象
-            currentSelect: {
-                type: null,
-                id: null,
-            },
             nodes: [
                 {
                     id: '1',
@@ -110,10 +113,10 @@ export default {
         };
     },
     mounted() {
-        // 拖动时取消选择文本
-        document.getElementById('container').onselectstart = function() {
-            return false;
-        };
+        // // 拖动时取消选择文本
+        // document.getElementById('container').onselectstart = function() {
+        //     return false;
+        // };
     },
     methods: {
         // 获取连接线 具体的path属性以及文本位置
@@ -164,58 +167,58 @@ export default {
                 path: `M${fromx} ${fromy}L${tox} ${toy}`,
                 textx,
                 texty,
+                fromx,
+                fromy,
+                tox,
+                toy,
             };
         },
-        beginMove(ev) {
-            // 开始拖动 记录拖动数据
-            if (this.mode == 'select') {
-                this.beginDrag(ev);
-            } else if (this.mode == 'connect') {
-                this.beginConnect(ev);
-            }
-        },
         moving(ev) {
-            if (this.mode == 'select') this.dragMoving(ev);
-            else if (this.mode == 'connect') this.connectMoving(ev);
+            if (!this.tempData.isConnecting) this.nodeMoving(ev);
+            else this.connectMoving(ev);
         },
         drop(ev) {
-            if (this.mode == 'select') this.dragDrop(ev);
-            else if (this.mode == 'connect') this.connectDrop(ev);
+            if (!this.tempData.isConnecting) this.nodeDrop(ev);
+            else this.connectDrop(ev);
         },
-        beginDrag(ev) {
+        beginMoveNode(ev) {
             // 开始拖动 记录拖动数据
-            this.dragData.nodeid = ev.target.parentNode.id;
-            this.sourceMouseX = ev.screenX;
-            this.sourceMouseY = ev.screenY;
+            this.tempData.dragData.nodeid = ev.target.parentNode.id;
+            this.tempData.dragData.sourceMouseX = ev.screenX;
+            this.tempData.dragData.sourceMouseY = ev.screenY;
         },
         beginConnect(ev) {
-            this.connectLine.nodeId = ev.target.parentNode.id;
+            this.tempData.connectLine.nodeId = ev.target.parentNode.id;
         },
         // 拖动移动
-        dragMoving(ev) {
-            if (!this.dragData.nodeid) return;
+        nodeMoving(ev) {
+            if (!this.tempData.dragData.nodeid) return;
             // 鼠标偏移量
-            let offsetX = ev.screenX - this.sourceMouseX;
-            let offsetY = ev.screenY - this.sourceMouseY;
+            let offsetX = ev.screenX - this.tempData.dragData.sourceMouseX;
+            let offsetY = ev.screenY - this.tempData.dragData.sourceMouseY;
             // 拖动范围小于5 不处理
             if (Math.abs(offsetX) + Math.abs(offsetY) < 5) return;
-            let node = this.nodes.find(r => r.id == this.dragData.nodeid);
+            let node = this.nodes.find(
+                r => r.id == this.tempData.dragData.nodeid
+            );
             if (!node) return;
             node.x += offsetX;
             node.y += offsetY;
             this.extendPaperIfNeed(node);
             // 重置鼠标位置
-            this.sourceMouseX = ev.screenX;
-            this.sourceMouseY = ev.screenY;
+            this.tempData.dragData.sourceMouseX = ev.screenX;
+            this.tempData.dragData.sourceMouseY = ev.screenY;
         },
         // 拖动完成
-        dragDrop() {
+        nodeDrop() {
             // 拖动完成 情况拖动数据
-            this.dragData = {};
+            this.tempData.dragData = {};
         },
         // 连接移动
         connectMoving(ev) {
-            let node = this.nodes.find(r => r.id == this.connectLine.nodeId);
+            let node = this.nodes.find(
+                r => r.id == this.tempData.connectLine.nodeId
+            );
             if (!node) return;
             let fromNode = node;
             let nodeWidth = this.nodeWidth;
@@ -249,7 +252,7 @@ export default {
             let fromy = fromPoints[result.fromIndex].y;
             let tox = toPoints[result.toIndex].x;
             let toy = toPoints[result.toIndex].y;
-            this.connectLine.path = `M${fromx} ${fromy}L${tox} ${toy}`;
+            this.tempData.connectLine.path = `M${fromx} ${fromy}L${tox} ${toy}`;
         },
         // 连接完成
         connectDrop(ev) {
@@ -257,19 +260,19 @@ export default {
             if (targetNode) {
                 let exists = this.lines.some(
                     r =>
-                        r.from == this.connectLine.nodeId &&
+                        r.from == this.tempData.connectLine.nodeId &&
                         r.to == targetNode.id
                 );
                 if (!exists) {
                     this.lines.push({
                         id: Math.random().toString(),
-                        from: this.connectLine.nodeId,
+                        from: this.tempData.connectLine.nodeId,
                         to: targetNode.id,
                         text: '',
                     });
                 }
             }
-            this.connectLine = {
+            this.tempDate.connectLine = {
                 path: null,
                 nodeId: null,
             };
@@ -303,8 +306,48 @@ export default {
                 this.paperHeight *= 2;
         },
         select(type, id) {
-            this.currentSelect.type = type;
-            this.currentSelect.id = id;
+            this.tempData.currentSelect.type = type;
+            this.tempData.currentSelect.id = id;
+        },
+        // 获取当前选择的对象的删除标记中心点
+        getSelectPoint() {
+            if (!this.tempDate.currentSelect.id) return null;
+
+            if (this.tempDate.currentSelect.type == 'line') {
+                // 如果是连接线 设置在起点
+                var line = this.lines.find(
+                    r => r.id == this.tempDate.currentSelect.id
+                );
+
+                var info = this.getLineInfo(line);
+                return {
+                    x: info.fromx,
+                    y: info.fromy,
+                };
+            } else if (this.tempDate.currentSelect.type == 'node') {
+                // 如果是节点 设置在右上角
+                var node = this.node.find(
+                    r => r.id == this.tempDate.currentSelect.id
+                );
+
+                return {
+                    x: node.x + this.nodeWidth,
+                    y: node.y,
+                };
+            }
+        },
+        getNodeConnectPoint() {
+            if (!this.tempDate.currentSelect.id) return null;
+
+            // 如果是节点 设置在右上角
+            var node = this.node.find(
+                r => r.id == this.tempDate.currentSelect.id
+            );
+
+            return {
+                x: node.x + this.nodeWidth,
+                y: node.y + this.nodeHeight,
+            };
         },
     },
 };
