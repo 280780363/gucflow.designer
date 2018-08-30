@@ -132,7 +132,7 @@ export default {
                 let fromPoint = fromPoints[i];
                 for (let j = 0; j < 4; j++) {
                     let toPoint = toPoints[j];
-                    var length = Math.sqrt(
+                    let length = Math.sqrt(
                         Math.pow(Math.abs(toPoint.x - fromPoint.x), 2) +
                             Math.pow(Math.abs(toPoint.y - fromPoint.y), 2)
                     );
@@ -186,11 +186,11 @@ export default {
         dragMoving(ev) {
             if (!this.dragData.nodeid) return;
             // 鼠标偏移量
-            var offsetX = ev.screenX - this.sourceMouseX;
-            var offsetY = ev.screenY - this.sourceMouseY;
+            let offsetX = ev.screenX - this.sourceMouseX;
+            let offsetY = ev.screenY - this.sourceMouseY;
             // 拖动范围小于5 不处理
             if (Math.abs(offsetX) + Math.abs(offsetY) < 5) return;
-            var node = this.nodes.find(r => r.id == this.dragData.nodeid);
+            let node = this.nodes.find(r => r.id == this.dragData.nodeid);
             if (!node) return;
             node.x += offsetX;
             node.y += offsetY;
@@ -205,7 +205,7 @@ export default {
         },
         // 连接移动
         connectMoving(ev) {
-            var node = this.nodes.find(r => r.id == this.connectLine.nodeId);
+            let node = this.nodes.find(r => r.id == this.connectLine.nodeId);
             if (!node) return;
             let fromNode = node;
             let nodeWidth = this.nodeWidth;
@@ -222,7 +222,7 @@ export default {
                 let fromPoint = fromPoints[i];
                 for (let j = 0; j < 1; j++) {
                     let toPoint = toPoints[j];
-                    var length = Math.sqrt(
+                    let length = Math.sqrt(
                         Math.pow(Math.abs(toPoint.x - fromPoint.x), 2) +
                             Math.pow(Math.abs(toPoint.y - fromPoint.y), 2)
                     );
@@ -243,9 +243,9 @@ export default {
         },
         // 连接完成
         connectDrop(ev) {
-            var targetNode = this.getMousePointNode(ev);
+            let targetNode = this.getMousePointNode(ev);
             if (targetNode) {
-                var exists = this.lines.some(
+                let exists = this.lines.some(
                     r =>
                         r.from == this.connectLine.nodeId &&
                         r.to == targetNode.id
