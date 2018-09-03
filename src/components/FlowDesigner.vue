@@ -23,7 +23,9 @@
                     <text :x="item.x+item.nodeWidth/2" :y="item.y+item.nodeHeight/2" text-anchor="middle" font-size="12" stroke-width="0">
                         {{item.text}}
                     </text> -->
-                    <NormalNode :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</NormalNode>
+                    <NormalNode v-if="item.type=='normal'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</NormalNode>
+                    <StartNode v-if="item.type=='start'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</StartNode>
+                    <StopNode v-if="item.type=='stop'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</StopNode>
                 </g>
                 <g v-for="item in lines" :key="'line'+item.id" class="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     {{ lineData = getLineInfo(item)}}
@@ -41,6 +43,8 @@
 <script>
 import common from '../utils/common.js';
 import NormalNode from './normal.vue';
+import StartNode from './start.vue';
+import StopNode from './stop.vue';
 
 common.useArrayExtends();
 const mode = {
@@ -48,15 +52,15 @@ const mode = {
     connect: 'connect',
 };
 const nodeType = {
-    begin: 'begin', //开始
-    end: 'end', //结束
+    start: 'start', //开始
+    stop: 'stop', //结束
     normal: 'normal', //普通类型
-    switchStart: 'switchStart', //并行分支开始
+    switchBegin: 'switchBegin', //并行分支开始
     switchEnd: 'switchEnd', //并行分支结束
 };
 
 export default {
-    components: {NormalNode},
+    components: {NormalNode, StartNode, StopNode},
     data() {
         return {
             paperWidth: 1000,
@@ -82,19 +86,19 @@ export default {
             nodes: [
                 {
                     id: '1',
-                    type: nodeType.begin,
+                    type: nodeType.start,
                     text: '开始',
-                    x: 10,
-                    y: 10,
-                    nodeWidth: 100,
-                    nodeHeight: 50,
+                    x: 50,
+                    y: 50,
+                    nodeWidth: 70,
+                    nodeHeight: 70,
                 },
                 {
                     id: '2',
                     type: nodeType.normal,
                     text: '经理审批',
                     x: 200,
-                    y: 10,
+                    y: 50,
                     nodeWidth: 100,
                     nodeHeight: 50,
                 },
@@ -103,7 +107,7 @@ export default {
                     type: nodeType.normal,
                     text: '总监审批',
                     x: 500,
-                    y: 10,
+                    y: 50,
                     nodeWidth: 100,
                     nodeHeight: 50,
                 },
@@ -118,12 +122,12 @@ export default {
                 },
                 {
                     id: '5',
-                    type: nodeType.end,
+                    type: nodeType.stop,
                     text: '结束',
                     x: 500,
                     y: 300,
-                    nodeWidth: 100,
-                    nodeHeight: 50,
+                    nodeWidth: 70,
+                    nodeHeight: 70,
                 },
             ],
             lines: [
@@ -165,29 +169,30 @@ export default {
         getLineInfo(line) {
             let fromNode = this.nodes.find(r => r.id == line.from);
             let toNode = this.nodes.find(r => r.id == line.to);
+            // 上 下 左 右
             let fromPoints = [
-                {x: fromNode.x + fromNode.nodeWidth / 2, y: fromNode.y},
+                {x: fromNode.x, y: fromNode.y - fromNode.nodeHeight / 2},
+                {
+                    x: fromNode.x,
+                    y: fromNode.y + fromNode.nodeHeight / 2,
+                },
+                {x: fromNode.x - fromNode.nodeWidth / 2, y: fromNode.y},
                 {
                     x: fromNode.x + fromNode.nodeWidth / 2,
-                    y: fromNode.y + fromNode.nodeHeight,
-                },
-                {x: fromNode.x, y: fromNode.y + fromNode.nodeHeight / 2},
-                {
-                    x: fromNode.x + fromNode.nodeWidth,
-                    y: fromNode.y + fromNode.nodeHeight / 2,
+                    y: fromNode.y,
                 },
             ];
 
             let toPoints = [
-                {x: toNode.x + toNode.nodeWidth / 2, y: toNode.y},
+                {x: toNode.x, y: toNode.y - toNode.nodeHeight / 2},
+                {
+                    x: toNode.x,
+                    y: toNode.y + toNode.nodeHeight / 2,
+                },
+                {x: toNode.x - toNode.nodeWidth / 2, y: toNode.y},
                 {
                     x: toNode.x + toNode.nodeWidth / 2,
-                    y: toNode.y + toNode.nodeHeight,
-                },
-                {x: toNode.x, y: toNode.y + toNode.nodeHeight / 2},
-                {
-                    x: toNode.x + toNode.nodeWidth,
-                    y: toNode.y + toNode.nodeHeight / 2,
+                    y: toNode.y,
                 },
             ];
 
@@ -238,13 +243,15 @@ export default {
             else if (this.tempData.mode == mode.connect) this.connectDrop(ev);
         },
         beginDrag(ev) {
+            var node = this.getMousePointNode(ev);
+            if (!node) console.error(ev);
             // 开始拖动 记录拖动数据
             this.tempData.dragData.nodeid = this.getMousePointNode(ev).id;
             this.tempData.dragData.sourceMouseX = ev.screenX;
             this.tempData.dragData.sourceMouseY = ev.screenY;
         },
         beginConnect(ev) {
-            this.tempData.connectLine.nodeId = ev.target.parentNode.id;
+            this.tempData.connectLine.nodeId = this.getMousePointNode(ev).id;
         },
         // 拖动移动
         dragMoving(ev) {
@@ -264,7 +271,6 @@ export default {
             // 重置鼠标位置
             this.tempData.dragData.sourceMouseX = ev.screenX;
             this.tempData.dragData.sourceMouseY = ev.screenY;
-            console.log(node.x + '---' + node.y);
         },
         // 拖动完成
         dragDrop() {
@@ -279,15 +285,15 @@ export default {
             if (!node) return;
             let fromNode = node;
             let fromPoints = [
-                {x: fromNode.x + fromNode.nodeWidth / 2, y: fromNode.y},
+                {x: fromNode.x, y: fromNode.y - fromNode.nodeHeight / 2},
+                {
+                    x: fromNode.x,
+                    y: fromNode.y + fromNode.nodeHeight / 2,
+                },
+                {x: fromNode.x - fromNode.nodeWidth / 2, y: fromNode.y},
                 {
                     x: fromNode.x + fromNode.nodeWidth / 2,
-                    y: fromNode.y + fromNode.nodeHeight,
-                },
-                {x: fromNode.x, y: fromNode.y + fromNode.nodeHeight / 2},
-                {
-                    x: fromNode.x + fromNode.nodeWidth,
-                    y: fromNode.y + fromNode.nodeHeight / 2,
+                    y: fromNode.y,
                 },
             ];
             let toPoints = [{x: ev.offsetX, y: ev.offsetY}];
@@ -355,10 +361,10 @@ export default {
             let y = ev.offsetY;
             return this.nodes.find(
                 r =>
-                    x >= r.x &&
-                    x <= r.x + r.nodeWidth &&
-                    y >= r.y &&
-                    y <= r.y + r.nodeHeight
+                    x >= r.x - r.nodeWidth / 2 &&
+                    x <= r.x + r.nodeWidth / 2 &&
+                    y >= r.y - r.nodeHeight / 2 &&
+                    y <= r.y + r.nodeHeight / 2
             );
         },
         extendPaperIfNeed(node) {
