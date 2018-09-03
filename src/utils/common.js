@@ -20,6 +20,15 @@ const common = {
       S4 ()
     );
   },
+  useArrayExtends () {
+    // 数组原型扩展
+    Array.prototype.remove = function (where) {
+      this.filter (where).forEach (r => {
+        var index = this.indexOf (r);
+        this.splice (index, 1);
+      });
+    };
+  },
 };
 
 export default common;

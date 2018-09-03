@@ -1,0 +1,14 @@
+<template>
+    <g>
+        <rect :width="width" :height="height" :x="x" :y="y" rx="2" ry="2" stroke-width="2" fill="transparent" stroke-dasharray="0" />
+        <text :x="x+width/2" :y="y+height/2" text-anchor="middle" font-size="12" stroke-width="0">
+            <slot></slot>
+        </text>
+    </g>
+</template>
+<script>
+export default {
+    props: ['x', 'y', 'width', 'height'],
+};
+</script>
+

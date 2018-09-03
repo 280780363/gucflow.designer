@@ -4,12 +4,12 @@
             <button type="button" @click="tempData.mode='select'">选择</button>
             <button type="button" @click="tempData.mode='connect'">连接</button>
             <span>|</span>
-            <button type="button" @click="tempData.mode='delete'">删除</button>
+            <button type="button" @click="remove">删除</button>
         </div>
         <div id="container">
             <div :style="{width:paperWidth+'px',height:paperHeight+'px'}" class="backgroud">
             </div>
-            <svg :width="paperWidth" :height="paperHeight" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving($event)" @mouseup="drop($event)">
+            <svg :width="paperWidth" :height="paperHeight" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving($event)" @mouseup="drop($event)" @click="cancelSelect">
                 <defs>
                     <marker id="arrow-unselect" orient="auto" overflow="visible" markerUnits="userSpaceOnUse">
                         <path stroke="none" class='unselect' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
@@ -18,13 +18,14 @@
                         <path stroke="none" class='select' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
                     </marker>
                 </defs>
-                <g v-for="item in nodes" :key="'node'+item.id" :id="item.id" class="pointer" @dblclick="nodeDblClick(item)" @mousedown="beginMove($event)" @click="select('node',item.id)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
-                    <rect :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y" rx="2" ry="2" stroke-width="2" fill="transparent" stroke-dasharray="0" />1
+                <g v-for="item in nodes" :key="'node'+item.id" :id="item.id" class="pointer" @dblclick="nodeDblClick(item)" @mousedown="beginMove($event)" @click.stop="select('node',item.id)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
+                    <!-- <rect :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y" rx="2" ry="2" stroke-width="2" fill="transparent" stroke-dasharray="0" />1
                     <text :x="item.x+item.nodeWidth/2" :y="item.y+item.nodeHeight/2" text-anchor="middle" font-size="12" stroke-width="0">
                         {{item.text}}
-                    </text>
+                    </text> -->
+                    <NormalNode :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</NormalNode>
                 </g>
-                <g v-for="item in lines" :key="'line'+item.id" class="pointer" @dblclick="lineDblClick(item)" @click="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
+                <g v-for="item in lines" :key="'line'+item.id" class="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     {{ lineData = getLineInfo(item)}}
                     <path :d="lineData.path" fill="none" stroke="transparent" stroke-width="10" />
                     <path :d="lineData.path" fill="none" stroke-width="2" :marker-end="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'url(#arrow-select)':'url(#arrow-unselect)'" />
@@ -32,13 +33,16 @@
                         {{item.text}}
                     </text>
                 </g>
-                <path :d="tempData.connectLine.path" v-if="tempData.connectLine.path" fill="none" class="unselect" stroke-width="2" marker-end="arrow-unselect" />
+                <path :d="tempData.connectLine.path" v-if="tempData.connectLine.path" fill="none" class="unselect" stroke-width="2" marker-end="url(#arrow-unselect)" />
             </svg>
         </div>
     </div>
 </template>
 <script>
 import common from '../utils/common.js';
+import NormalNode from './normal.vue';
+
+common.useArrayExtends();
 const mode = {
     select: 'select',
     connect: 'connect',
@@ -50,7 +54,9 @@ const nodeType = {
     switchStart: 'switchStart', //并行分支开始
     switchEnd: 'switchEnd', //并行分支结束
 };
+
 export default {
+    components: {NormalNode},
     data() {
         return {
             paperWidth: 1000,
@@ -159,7 +165,6 @@ export default {
         getLineInfo(line) {
             let fromNode = this.nodes.find(r => r.id == line.from);
             let toNode = this.nodes.find(r => r.id == line.to);
-
             let fromPoints = [
                 {x: fromNode.x + fromNode.nodeWidth / 2, y: fromNode.y},
                 {
@@ -234,9 +239,9 @@ export default {
         },
         beginDrag(ev) {
             // 开始拖动 记录拖动数据
-            this.tempData.dragData.nodeid = ev.target.parentNode.id;
-            this.sourceMouseX = ev.screenX;
-            this.sourceMouseY = ev.screenY;
+            this.tempData.dragData.nodeid = this.getMousePointNode(ev).id;
+            this.tempData.dragData.sourceMouseX = ev.screenX;
+            this.tempData.dragData.sourceMouseY = ev.screenY;
         },
         beginConnect(ev) {
             this.tempData.connectLine.nodeId = ev.target.parentNode.id;
@@ -245,8 +250,8 @@ export default {
         dragMoving(ev) {
             if (!this.tempData.dragData.nodeid) return;
             // 鼠标偏移量
-            let offsetX = ev.screenX - this.sourceMouseX;
-            let offsetY = ev.screenY - this.sourceMouseY;
+            let offsetX = ev.screenX - this.tempData.dragData.sourceMouseX;
+            let offsetY = ev.screenY - this.tempData.dragData.sourceMouseY;
             // 拖动范围小于5 不处理
             if (Math.abs(offsetX) + Math.abs(offsetY) < 5) return;
             let node = this.nodes.find(
@@ -257,8 +262,9 @@ export default {
             node.y += offsetY;
             this.extendPaperIfNeed(node);
             // 重置鼠标位置
-            this.sourceMouseX = ev.screenX;
-            this.sourceMouseY = ev.screenY;
+            this.tempData.dragData.sourceMouseX = ev.screenX;
+            this.tempData.dragData.sourceMouseY = ev.screenY;
+            console.log(node.x + '---' + node.y);
         },
         // 拖动完成
         dragDrop() {
@@ -318,7 +324,6 @@ export default {
                         r.from == this.tempData.connectLine.nodeId &&
                         r.to == targetNode.id
                 );
-                debugger;
                 if (
                     !exists &&
                     this.tempData.connectLine.nodeId != targetNode.id
@@ -331,7 +336,7 @@ export default {
                     });
                 }
             }
-            this.connectLine = {
+            this.tempData.connectLine = {
                 path: null,
                 nodeId: null,
             };
@@ -365,7 +370,35 @@ export default {
         select(type, id) {
             this.tempData.currentSelect.type = type;
             this.tempData.currentSelect.id = id;
-        }
+        },
+        cancelSelect() {
+            this.tempData.currentSelect.type = null;
+            this.tempData.currentSelect.id = null;
+        },
+        remove() {
+            if (
+                this.tempData.currentSelect.id &&
+                this.tempData.currentSelect.type
+            ) {
+                if (this.tempData.currentSelect.type == 'node') {
+                    // 删除响应的连接线
+                    this.lines.remove(
+                        r => r.from == this.tempData.currentSelect.id
+                    );
+                    this.lines.remove(
+                        r => r.to == this.tempData.currentSelect.id
+                    );
+                    // 删除节点
+                    this.nodes.remove(
+                        r => r.id == this.tempData.currentSelect.id
+                    );
+                } else if (this.tempData.currentSelect.type == 'line') {
+                    this.lines.remove(
+                        r => r.id == this.tempData.currentSelect.id
+                    );
+                }
+            }
+        },
     },
 };
 </script>
