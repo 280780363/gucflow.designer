@@ -26,6 +26,9 @@
                     <NormalNode v-if="item.type=='normal'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</NormalNode>
                     <StartNode v-if="item.type=='start'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</StartNode>
                     <StopNode v-if="item.type=='stop'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</StopNode>
+                    <SwitchBeginNode v-if="item.type=='switchBegin'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</SwitchBeginNode>
+                    <SwitchEndNode v-if="item.type=='switchEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</SwitchEndNode>
+
                 </g>
                 <g v-for="item in lines" :key="'line'+item.id" class="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     {{ lineData = getLineInfo(item)}}
@@ -45,6 +48,8 @@ import common from '../utils/common.js';
 import NormalNode from './normal.vue';
 import StartNode from './start.vue';
 import StopNode from './stop.vue';
+import SwitchBeginNode from './switchBegin.vue';
+import SwitchEndNode from './switchEnd.vue';
 
 common.useArrayExtends();
 const mode = {
@@ -60,7 +65,13 @@ const nodeType = {
 };
 
 export default {
-    components: {NormalNode, StartNode, StopNode},
+    components: {
+        NormalNode,
+        StartNode,
+        StopNode,
+        SwitchBeginNode,
+        SwitchEndNode,
+    },
     data() {
         return {
             paperWidth: 1000,
@@ -104,7 +115,7 @@ export default {
                 },
                 {
                     id: '3',
-                    type: nodeType.normal,
+                    type: nodeType.switchBegin,
                     text: '总监审批',
                     x: 500,
                     y: 50,
@@ -113,7 +124,7 @@ export default {
                 },
                 {
                     id: '4',
-                    type: nodeType.normal,
+                    type: nodeType.switchEnd,
                     text: '董事长审批',
                     x: 500,
                     y: 200,
