@@ -4,7 +4,6 @@
             <button type="button" @click="tempData.mode='select'">选择</button>
             <button type="button" @click="tempData.mode='connect'">连接</button>
             <span>|</span>
-            <button type="button" @click="remove">删除</button>
         </div>
         <div id="container">
             <div :style="{width:paperWidth+'px',height:paperHeight+'px'}" class="backgroud">
@@ -18,7 +17,7 @@
                         <path stroke="none" class='select' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
                     </marker>
                 </defs>
-                <g v-for="item in nodes" :key="'node'+item.id" :id="item.id" class="pointer" @dblclick="nodeDblClick(item)" @mousedown="beginMove($event)" @click.stop="select('node',item.id)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
+                <g v-for="item in nodes" :key="'node'+item.id" :id="item.id" class="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove($event)" @click.stop="select('node',item.id)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     <!-- <rect :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y" rx="2" ry="2" stroke-width="2" fill="transparent" stroke-dasharray="0" />1
                     <text :x="item.x+item.nodeWidth/2" :y="item.y+item.nodeHeight/2" text-anchor="middle" font-size="12" stroke-width="0">
                         {{item.text}}
@@ -34,11 +33,18 @@
                     {{ lineData = getLineInfo(item)}}
                     <path :d="lineData.path" fill="none" stroke="transparent" stroke-width="10" />
                     <path :d="lineData.path" fill="none" stroke-width="2" :marker-end="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'url(#arrow-select)':'url(#arrow-unselect)'" />
-                    <text :x="lineData.textx" :y="lineData.texty" text-anchor="middle" font-size="12" stroke-width="0">
+                    <text :x="lineData.textx" :y="lineData.texty">
                         {{item.text}}
                     </text>
                 </g>
-                <path :d="tempData.connectLine.path" v-if="tempData.connectLine.path" fill="none" class="unselect" stroke-width="2" marker-end="url(#arrow-unselect)" />
+                <path :d="tempData.connectLine.path" v-if="tempData.connectLine.path" fill="none" class="unselect" stroke-width="2" marker-end="url(#arrow-unselect)" /> {{ deleteInfo = getDeleteIconInfo()}}
+                <svg v-if="deleteInfo" @click="remove" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="delete" :x="deleteInfo.x" :y="deleteInfo.y" :width="deleteInfo.r" :height="deleteInfo.r" viewBox="0 0 1000 1000" enable-background="new 0 0 1000 1000" xml:space="preserve">
+                    <metadata> Svg Vector Icons : http://www.sfont.cn </metadata>
+                    <g>
+                        <path d="M500,10C228.7,10,10,229.9,10,500c0,271.3,219.9,490,490,490c271.3,0,490-219.9,490-490S771.3,10,500,10z M500,936.2c-240.2,0-435-194.8-435-435S259.8,65,501.2,65c240.2,0,436.2,194.8,436.2,436.2C936.2,741.4,741.4,936.2,500,936.2z" />
+                        <path d="M686.4,369.7l-55-56.2L500,445L369.7,313.6l-56.2,56.2L445,501.2L313.6,631.5l56.2,56.2L500,556.2l131.5,131.5l55-56.2L556.2,501.2L686.4,369.7z" />
+                    </g>
+                </svg>
             </svg>
         </div>
     </div>
@@ -101,15 +107,15 @@ export default {
                     text: '开始',
                     x: 50,
                     y: 50,
-                    nodeWidth: 70,
-                    nodeHeight: 70,
+                    nodeWidth: 100,
+                    nodeHeight: 50,
                 },
                 {
                     id: '2',
                     type: nodeType.normal,
                     text: '经理审批',
                     x: 200,
-                    y: 50,
+                    y: 100,
                     nodeWidth: 100,
                     nodeHeight: 50,
                 },
@@ -137,8 +143,8 @@ export default {
                     text: '结束',
                     x: 500,
                     y: 300,
-                    nodeWidth: 70,
-                    nodeHeight: 70,
+                    nodeWidth: 100,
+                    nodeHeight: 50,
                 },
             ],
             lines: [
@@ -235,6 +241,10 @@ export default {
                 path: `M${fromx} ${fromy}L${tox} ${toy}`,
                 textx,
                 texty,
+                fromx,
+                fromy,
+                tox,
+                toy,
             };
         },
         beginMove(ev) {
@@ -254,7 +264,7 @@ export default {
             else if (this.tempData.mode == mode.connect) this.connectDrop(ev);
         },
         beginDrag(ev) {
-            var node = this.getMousePointNode(ev);
+            let node = this.getMousePointNode(ev);
             if (!node) console.error(ev);
             // 开始拖动 记录拖动数据
             this.tempData.dragData.nodeid = this.getMousePointNode(ev).id;
@@ -416,6 +426,38 @@ export default {
                 }
             }
         },
+        getDeleteIconInfo() {
+            if (
+                !this.tempData.currentSelect.id ||
+                !this.tempData.currentSelect.type
+            )
+                return null;
+            if (this.tempData.currentSelect.type == 'node') {
+                let node = this.nodes.find(
+                    r => r.id == this.tempData.currentSelect.id
+                );
+                if (!node) return null;
+                let r = (node.nodeWidth + node.nodeHeight) * 0.12;
+
+                return {
+                    x: node.x + node.nodeWidth / 2,
+                    y: node.y - node.nodeHeight / 2 - r,
+                    r: r,
+                };
+            } else if (this.tempData.currentSelect.type == 'line') {
+                let line = this.lines.find(
+                    r => r.id == this.tempData.currentSelect.id
+                );
+                if (!line) return null;
+                let r = 18;
+                let lineInfo = this.getLineInfo(line);
+                return {
+                    x: lineInfo.textx + 9,
+                    y: lineInfo.texty + 4,
+                    r: r,
+                };
+            }
+        },
     },
 };
 </script>
@@ -440,6 +482,11 @@ export default {
         z-index: 10;
         top: 0;
         left: 0;
+        text {
+            text-anchor: middle;
+            font-size: 14px;
+            stroke-width: 0;
+        }
     }
     .backgroud {
         position: 'absolute';
@@ -457,5 +504,11 @@ export default {
 .unselect {
     fill: @selectColor;
     stroke: @selectColor;
+}
+.delete {
+    cursor: pointer;
+    fill: @unselectColor;
+    stroke: @unselectColor;
+    z-index: 11;
 }
 </style>

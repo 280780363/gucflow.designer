@@ -1,10 +1,18 @@
 <template>
     <g>
         <rect :width="width" :height="height" :x="x-width/2" :y="y-height/2" rx="2" ry="2" stroke-width="2" fill="transparent" stroke-dasharray="0" />
-        <text :x="x" :y="y+2" text-anchor="middle" font-size="12" stroke-width="0">
+        <text :x="x" :y="y+2" text-anchor="middle" font-size="14" stroke-width="0">
             <slot></slot>
         </text>
-        <image xlink:href="../assets/merge.png" :x="x-width/2+2" :y="y-height/2+2" height="18" width="18" />
+        <!-- <image xlink:href="../assets/merge.png" :x="x-width/2+2" :y="y-height/2+2" height="18" width="18" /> -->
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" :x="x-width/2+2" :y="y-height/2+2" height="18" width="18" viewBox="0 0 1000 1000" enable-background="new 0 0 1000 1000" xml:space="preserve">
+            <metadata> Svg Vector Icons : http://www.sfont.cn </metadata>
+            <g>
+                <g transform="translate(0.000000,511.000000) scale(0.100000,-0.100000)">
+                    <path d="M872,4990.5c-19.8-19.8-31.7-225.7-31.7-459.3v-423.7l902.8-15.9c819.7-15.8,922.6-23.7,1176-110.9c574.2-198,1108.7-673.1,1366.1-1207.7c237.6-502.9,237.6-483.1,237.6-3286.6v-2561.9l-613.8,590c-340.5,320.7-629.6,590-645.4,597.9c-15.8,3.9-166.3-130.7-336.6-300.9l-304.9-308.9l403.9-392c225.7-213.8,752.3-732.5,1172.1-1144.3l760.3-756.3l1168.1,1168.1l1164.2,1164.2l-301,328.7l-304.9,332.6L6079-2402.3l-605.8-605.9l-7.9,2395.6c-7.9,1318.6-7.9,2498.6-3.9,2625.3c7.9,316.8,146.5,696.9,376.2,1041.4c229.6,344.5,538.5,609.8,922.6,795.9c431.6,201.9,720.7,249.5,1615.6,249.5h784l-11.9,447.4l-11.9,443.5l-851.3-4c-914.7,0-1231.5-47.5-1698.7-233.6c-558.3-229.7-1069.1-629.6-1417.6-1120.6c-99-138.6-194-237.6-205.9-217.8c-15.8,15.8-103,130.7-194,253.4C4309,4281.7,3580.5,4756.9,2863.7,4915.3C2574.7,4982.6,919.5,5042,872,4990.5z" />
+                </g>
+            </g>
+        </svg>
     </g>
 </template>
 <script>
