@@ -1,5 +1,5 @@
 # gucflow.designer
-[https://280780363.github.io/gucflow.designer/]https://280780363.github.io/gucflow.designer/
+https://280780363.github.io/gucflow.designer/
 ## Project setup
 ```
 yarn install
