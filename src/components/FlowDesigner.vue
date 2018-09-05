@@ -3,14 +3,35 @@
 
         <div id="container" :style="{width:paperWidth+60+'px',height:paperHeight+'px'}">
             <div id="toolbar">
-                <div @click="switchMode('select','mode-select',null)" id="mode-select" :class="{current:tempData.mode.currentDivId=='mode-select'}">选择</div>
-                <div @click="switchMode('connect','mode-connect',null)" id="mode-connect" :class="{current:tempData.mode.currentDivId=='mode-connect'}">连接</div>
+                <div @click="switchMode('select','mode-select')" id="mode-select" :class="{current:tempData.mode.currentDivId=='mode-select'}">
+                    <img src="../assets/mouse.svg">
+                    <p>选择</p>
+                </div>
+                <div @click="switchMode('connect','mode-connect')" id="mode-connect" :class="{current:tempData.mode.currentDivId=='mode-connect'}">
+                    <img src="../assets/connect.svg">
+                    <p>连接</p>
+                </div>
                 <hr/>
-                <div @click="switchMode('addNode','mode-add-normal','normal')" id="mode-add-normal" :class="{current:tempData.mode.currentDivId=='mode-add-normal'}">普通节点</div>
-                <div @click="switchMode('addNode','mode-add-switchBegin','switchBegin')" id="mode-add-switchBegin" :class="{current:tempData.mode.currentDivId=='mode-add-switchBegin'}">分流</div>
-                <div @click="switchMode('addNode','mode-add-switchEnd','switchEnd')" id="mode-add-switchEnd" :class="{current:tempData.mode.currentDivId=='mode-add-switchEnd'}">合流</div>
-                <div @click="switchMode('addNode','mode-add-switchBeginAndEnd','switchBeginAndEnd')" id="mode-add-switchBeginAndEnd" :class="{current:tempData.mode.currentDivId=='mode-add-switchBeginAndEnd'}">分合流</div>
-                <div @click="switchMode('addNode','mode-add-subflow','subflow')" id="mode-add-subflow" :class="{current:tempData.mode.currentDivId=='mode-add-subflow'}">子流程</div>
+                <div @click="switchMode('addNode','mode-add-normal','normal','任务')" id="mode-add-normal" :class="{current:tempData.mode.currentDivId=='mode-add-normal'}">
+                    <img src="../assets/users1.svg">
+                    <p>任务</p>
+                </div>
+                <div @click="switchMode('addNode','mode-add-switchBegin','switchBegin','分支')" id="mode-add-switchBegin" :class="{current:tempData.mode.currentDivId=='mode-add-switchBegin'}">
+                    <img src="../assets/branch.svg">
+                    <p>分支</p>
+                </div>
+                <div @click="switchMode('addNode','mode-add-switchEnd','switchEnd','合并')" id="mode-add-switchEnd" :class="{current:tempData.mode.currentDivId=='mode-add-switchEnd'}">
+                    <img src="../assets/merge.svg">
+                    <p>合并</p>
+                </div>
+                <div @click="switchMode('addNode','mode-add-switchBeginAndEnd','switchBeginAndEnd','分支合并')" id="mode-add-switchBeginAndEnd" :class="{current:tempData.mode.currentDivId=='mode-add-switchBeginAndEnd'}">
+                    <img src="../assets/switchBeginAndEnd.svg">
+                    <p>分支合并</p>
+                </div>
+                <div @click="switchMode('addNode','mode-add-subflow','subflow','子流程')" id="mode-add-subflow" :class="{current:tempData.mode.currentDivId=='mode-add-subflow'}">
+                    <img src="../assets/subflow.svg">
+                    <p>子流程</p>
+                </div>
             </div>
             <div :style="{width:paperWidth+'px',height:paperHeight+'px'}" class="backgroud">
             </div>
@@ -110,8 +131,9 @@ export default {
                 },
                 // 当前新增的节点类型数据
                 mode: {
-                    currentDivId: null,
+                    currentDivId: 'mode-select',
                     addNodeType: null,
+                    addNodeText: null,
                     mode: mode.select,
                 },
             },
@@ -424,7 +446,7 @@ export default {
                 this.nodes.push({
                     id: common.guid(),
                     type: this.tempData.mode.addNodeType,
-                    text: '新步骤',
+                    text: this.tempData.mode.addNodeText || '新步骤',
                     x: ev.offsetX,
                     y: ev.offsetY,
                     nodeWidth: 100,
@@ -489,18 +511,19 @@ export default {
                 };
             }
         },
-        switchMode(mode, currentDivId, addNodeType) {
+        switchMode(mode, currentDivId, addNodeType, addNodeText) {
             this.tempData.mode.mode = mode;
             this.tempData.mode.currentDivId = currentDivId;
             this.tempData.mode.addNodeType = addNodeType;
+            this.tempData.mode.addNodeText = addNodeText;
         },
     },
 };
 </script>
 
 <style lang="less" scoped>
-@selectColor: rgb(49, 208, 198);
-@unselectColor: #d9534f;
+@unselectColor: rgb(49, 208, 198);
+@selectColor: #d9534f;
 
 .pointer {
     cursor: pointer;
@@ -509,7 +532,7 @@ export default {
 #container {
     position: relative;
     margin: 5px auto;
-    border: @selectColor 1px solid;
+    border: @unselectColor 1px solid;
     overflow: auto;
     .paper {
         position: absolute;
@@ -531,36 +554,47 @@ export default {
     }
     #toolbar {
         position: absolute;
-        width: 60px;
-        background-color: aqua;
+        width: 58px;
         top: 0;
         left: 0;
         padding-top: 10px;
         div {
-            width: 45px;
-            border: #d9534f 1px solid;
-            margin: 5px auto;
+            width: 50px;
+            background: @unselectColor;
+            margin: 10px auto;
             cursor: pointer;
             z-index: 20;
+            padding: 2px;
+            img {
+                width: 30px;
+                height: 30px;
+            }
+            p {
+                margin: 0;
+                padding: 0;
+                height: 12px;
+                line-height: 12px;
+                font-size: 12px;
+            }
         }
         .current {
-            background: #d9534f;
+            background: @selectColor;
         }
     }
 }
 
 .select {
-    fill: @unselectColor;
-    stroke: @unselectColor;
-}
-.unselect {
     fill: @selectColor;
     stroke: @selectColor;
 }
-.delete {
-    cursor: pointer;
+.unselect {
     fill: @unselectColor;
     stroke: @unselectColor;
+}
+.delete {
+    cursor: pointer;
+    fill: @selectColor;
+    stroke: @selectColor;
     z-index: 11;
 }
 </style>
