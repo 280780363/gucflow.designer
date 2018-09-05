@@ -1,14 +1,20 @@
 <template>
     <div>
-        <div id="toolbar" style="text-align:left">
-            <button type="button" @click="tempData.mode='select'">选择</button>
-            <button type="button" @click="tempData.mode='connect'">连接</button>
-            <span>|</span>
-        </div>
-        <div id="container">
+
+        <div id="container" :style="{width:paperWidth+60+'px',height:paperHeight+'px'}">
+            <div id="toolbar">
+                <div @click="switchMode('select','mode-select',null)" id="mode-select" :class="{current:tempData.mode.currentDivId=='mode-select'}">选择</div>
+                <div @click="switchMode('connect','mode-connect',null)" id="mode-connect" :class="{current:tempData.mode.currentDivId=='mode-connect'}">连接</div>
+                <hr/>
+                <div @click="switchMode('addNode','mode-add-normal','normal')" id="mode-add-normal" :class="{current:tempData.mode.currentDivId=='mode-add-normal'}">普通节点</div>
+                <div @click="switchMode('addNode','mode-add-switchBegin','switchBegin')" id="mode-add-switchBegin" :class="{current:tempData.mode.currentDivId=='mode-add-switchBegin'}">分流</div>
+                <div @click="switchMode('addNode','mode-add-switchEnd','switchEnd')" id="mode-add-switchEnd" :class="{current:tempData.mode.currentDivId=='mode-add-switchEnd'}">合流</div>
+                <div @click="switchMode('addNode','mode-add-switchBeginAndEnd','switchBeginAndEnd')" id="mode-add-switchBeginAndEnd" :class="{current:tempData.mode.currentDivId=='mode-add-switchBeginAndEnd'}">分合流</div>
+                <div @click="switchMode('addNode','mode-add-subflow','subflow')" id="mode-add-subflow" :class="{current:tempData.mode.currentDivId=='mode-add-subflow'}">子流程</div>
+            </div>
             <div :style="{width:paperWidth+'px',height:paperHeight+'px'}" class="backgroud">
             </div>
-            <svg :width="paperWidth" :height="paperHeight" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving($event)" @mouseup="drop($event)" @click="cancelSelect">
+            <svg :width="paperWidth" :height="paperHeight" class="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving($event)" @mouseup="drop($event)" @click.stop="paperClick">
                 <defs>
                     <marker id="arrow-unselect" orient="auto" overflow="visible" markerUnits="userSpaceOnUse">
                         <path stroke="none" class='unselect' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
@@ -18,16 +24,13 @@
                     </marker>
                 </defs>
                 <g v-for="item in nodes" :key="'node'+item.id" :id="item.id" class="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove($event)" @click.stop="select('node',item.id)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
-                    <!-- <rect :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y" rx="2" ry="2" stroke-width="2" fill="transparent" stroke-dasharray="0" />1
-                    <text :x="item.x+item.nodeWidth/2" :y="item.y+item.nodeHeight/2" text-anchor="middle" font-size="12" stroke-width="0">
-                        {{item.text}}
-                    </text> -->
                     <NormalNode v-if="item.type=='normal'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</NormalNode>
                     <StartNode v-if="item.type=='start'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</StartNode>
                     <StopNode v-if="item.type=='stop'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</StopNode>
                     <SwitchBeginNode v-if="item.type=='switchBegin'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</SwitchBeginNode>
                     <SwitchEndNode v-if="item.type=='switchEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</SwitchEndNode>
-
+                    <SwitchBeginAndEnd v-if="item.type=='switchBeginAndEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</SwitchBeginAndEnd>
+                    <Subflow v-if="item.type=='subflow'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</Subflow>
                 </g>
                 <g v-for="item in lines" :key="'line'+item.id" class="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     {{ lineData = getLineInfo(item)}}
@@ -38,7 +41,7 @@
                     </text>
                 </g>
                 <path :d="tempData.connectLine.path" v-if="tempData.connectLine.path" fill="none" class="unselect" stroke-width="2" marker-end="url(#arrow-unselect)" /> {{ deleteInfo = getDeleteIconInfo()}}
-                <svg v-if="deleteInfo" @click="remove" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="delete" :x="deleteInfo.x" :y="deleteInfo.y" :width="deleteInfo.r" :height="deleteInfo.r" viewBox="0 0 1000 1000" enable-background="new 0 0 1000 1000" xml:space="preserve">
+                <svg v-if="deleteInfo" @click.stop="remove" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="delete" :x="deleteInfo.x" :y="deleteInfo.y" :width="deleteInfo.r" :height="deleteInfo.r" viewBox="0 0 1000 1000" enable-background="new 0 0 1000 1000" xml:space="preserve">
                     <metadata> Svg Vector Icons : http://www.sfont.cn </metadata>
                     <g>
                         <path d="M500,10C228.7,10,10,229.9,10,500c0,271.3,219.9,490,490,490c271.3,0,490-219.9,490-490S771.3,10,500,10z M500,936.2c-240.2,0-435-194.8-435-435S259.8,65,501.2,65c240.2,0,436.2,194.8,436.2,436.2C936.2,741.4,741.4,936.2,500,936.2z" />
@@ -56,11 +59,14 @@ import StartNode from './start.vue';
 import StopNode from './stop.vue';
 import SwitchBeginNode from './switchBegin.vue';
 import SwitchEndNode from './switchEnd.vue';
+import SwitchBeginAndEnd from './switchBeginAndEnd.vue';
+import Subflow from './subflow.vue';
 
 common.useArrayExtends();
 const mode = {
     select: 'select',
     connect: 'connect',
+    addNode: 'addNode',
 };
 const nodeType = {
     start: 'start', //开始
@@ -68,6 +74,8 @@ const nodeType = {
     normal: 'normal', //普通类型
     switchBegin: 'switchBegin', //并行分支开始
     switchEnd: 'switchEnd', //并行分支结束
+    switchBeginAndEnd: 'switchBeginAndEnd',
+    subflow: 'subflow',
 };
 
 export default {
@@ -77,13 +85,14 @@ export default {
         StopNode,
         SwitchBeginNode,
         SwitchEndNode,
+        SwitchBeginAndEnd,
+        Subflow,
     },
     data() {
         return {
             paperWidth: 1000,
             paperHeight: 600,
             tempData: {
-                mode: mode.select,
                 dragData: {
                     nodeid: null,
                     sourceMouseX: null,
@@ -99,13 +108,19 @@ export default {
                     type: null,
                     id: null,
                 },
+                // 当前新增的节点类型数据
+                mode: {
+                    currentDivId: null,
+                    addNodeType: null,
+                    mode: mode.select,
+                },
             },
             nodes: [
                 {
                     id: '1',
                     type: nodeType.start,
                     text: '开始',
-                    x: 50,
+                    x: 150,
                     y: 50,
                     nodeWidth: 100,
                     nodeHeight: 50,
@@ -114,8 +129,8 @@ export default {
                     id: '2',
                     type: nodeType.normal,
                     text: '经理审批',
-                    x: 200,
-                    y: 100,
+                    x: 300,
+                    y: 150,
                     nodeWidth: 100,
                     nodeHeight: 50,
                 },
@@ -249,19 +264,21 @@ export default {
         },
         beginMove(ev) {
             // 开始拖动 记录拖动数据
-            if (this.tempData.mode == mode.select) {
+            if (this.tempData.mode.mode == mode.select) {
                 this.beginDrag(ev);
-            } else if (this.tempData.mode == mode.connect) {
+            } else if (this.tempData.mode.mode == mode.connect) {
                 this.beginConnect(ev);
             }
         },
         moving(ev) {
-            if (this.tempData.mode == mode.select) this.dragMoving(ev);
-            else if (this.tempData.mode == mode.connect) this.connectMoving(ev);
+            if (this.tempData.mode.mode == mode.select) this.dragMoving(ev);
+            else if (this.tempData.mode.mode == mode.connect)
+                this.connectMoving(ev);
         },
         drop(ev) {
-            if (this.tempData.mode == mode.select) this.dragDrop(ev);
-            else if (this.tempData.mode == mode.connect) this.connectDrop(ev);
+            if (this.tempData.mode.mode == mode.select) this.dragDrop(ev);
+            else if (this.tempData.mode.mode == mode.connect)
+                this.connectDrop(ev);
         },
         beginDrag(ev) {
             let node = this.getMousePointNode(ev);
@@ -395,12 +412,25 @@ export default {
                 this.paperHeight *= 2;
         },
         select(type, id) {
+            this.switchMode(mode.select, 'mode-select');
             this.tempData.currentSelect.type = type;
             this.tempData.currentSelect.id = id;
         },
-        cancelSelect() {
+        paperClick(ev) {
             this.tempData.currentSelect.type = null;
             this.tempData.currentSelect.id = null;
+            // 新增节点模式
+            if (this.tempData.mode.mode == mode.addNode) {
+                this.nodes.push({
+                    id: common.guid(),
+                    type: this.tempData.mode.addNodeType,
+                    text: '新步骤',
+                    x: ev.offsetX,
+                    y: ev.offsetY,
+                    nodeWidth: 100,
+                    nodeHeight: 50,
+                });
+            }
         },
         remove() {
             if (
@@ -426,6 +456,7 @@ export default {
                 }
             }
         },
+        // 获取删除图标位置信息
         getDeleteIconInfo() {
             if (
                 !this.tempData.currentSelect.id ||
@@ -437,7 +468,7 @@ export default {
                     r => r.id == this.tempData.currentSelect.id
                 );
                 if (!node) return null;
-                let r = (node.nodeWidth + node.nodeHeight) * 0.12;
+                let r = (node.nodeWidth + node.nodeHeight) * 0.2;
 
                 return {
                     x: node.x + node.nodeWidth / 2,
@@ -449,7 +480,7 @@ export default {
                     r => r.id == this.tempData.currentSelect.id
                 );
                 if (!line) return null;
-                let r = 18;
+                let r = 32;
                 let lineInfo = this.getLineInfo(line);
                 return {
                     x: lineInfo.textx + 9,
@@ -457,6 +488,11 @@ export default {
                     r: r,
                 };
             }
+        },
+        switchMode(mode, currentDivId, addNodeType) {
+            this.tempData.mode.mode = mode;
+            this.tempData.mode.currentDivId = currentDivId;
+            this.tempData.mode.addNodeType = addNodeType;
         },
     },
 };
@@ -474,14 +510,12 @@ export default {
     position: relative;
     margin: 5px auto;
     border: @selectColor 1px solid;
-    width: 1000px;
-    height: 600px;
     overflow: auto;
-    svg {
+    .paper {
         position: absolute;
         z-index: 10;
         top: 0;
-        left: 0;
+        left: 60px;
         text {
             text-anchor: middle;
             font-size: 14px;
@@ -489,11 +523,29 @@ export default {
         }
     }
     .backgroud {
-        position: 'absolute';
+        position: absolute;
         top: 0;
-        left: 0;
+        left: 60px;
         z-index: -1;
         background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIGlkPSJ2LTciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzIGlkPSJ2LTYiPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuXzAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHg9IjAiIHk9IjAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHJlY3QgaWQ9InYtOCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI0FBQUFBQSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgaWQ9InYtMTAiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGF0dGVybl8wKSIvPjwvc3ZnPg==');
+    }
+    #toolbar {
+        position: absolute;
+        width: 60px;
+        background-color: aqua;
+        top: 0;
+        left: 0;
+        padding-top: 10px;
+        div {
+            width: 45px;
+            border: #d9534f 1px solid;
+            margin: 5px auto;
+            cursor: pointer;
+            z-index: 20;
+        }
+        .current {
+            background: #d9534f;
+        }
     }
 }
 
