@@ -2,6 +2,7 @@
     <div>
 
         <div id="container" :style="{width:paperWidth+60+'px',height:paperHeight+'px'}">
+            <!-- 工具栏 -->
             <div id="toolbar">
                 <div @click="switchMode('select','mode-select')" id="mode-select" :class="{current:tempData.mode.currentDivId=='mode-select'}">
                     <img src="../assets/mouse.svg">
@@ -33,8 +34,10 @@
                     <p>子流程</p>
                 </div>
             </div>
+            <!-- 背景层 -->
             <div :style="{width:paperWidth+'px',height:paperHeight+'px'}" class="backgroud">
             </div>
+            <!-- 画布 -->
             <svg :width="paperWidth" :height="paperHeight" class="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving($event)" @mouseup="drop($event)" @click.stop="paperClick">
                 <defs>
                     <marker id="arrow-unselect" orient="auto" overflow="visible" markerUnits="userSpaceOnUse">
@@ -44,6 +47,7 @@
                         <path stroke="none" class='select' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
                     </marker>
                 </defs>
+                <!-- 节点 -->
                 <g v-for="item in nodes" :key="'node'+item.id" :id="item.id" class="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove($event)" @click.stop="select('node',item.id)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     <NormalNode v-if="item.type=='normal'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</NormalNode>
                     <StartNode v-if="item.type=='start'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</StartNode>
@@ -53,6 +57,7 @@
                     <SwitchBeginAndEnd v-if="item.type=='switchBeginAndEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</SwitchBeginAndEnd>
                     <Subflow v-if="item.type=='subflow'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</Subflow>
                 </g>
+                <!-- 连线 -->
                 <g v-for="item in lines" :key="'line'+item.id" class="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     {{ lineData = getLineInfo(item)}}
                     <path :d="lineData.path" fill="none" stroke="transparent" stroke-width="10" />
@@ -61,8 +66,9 @@
                         {{item.text}}
                     </text>
                 </g>
+                <!-- 动态连线 -->
                 <path :d="tempData.connectLine.path" v-if="tempData.connectLine.path" fill="none" class="unselect" stroke-width="2" marker-end="url(#arrow-unselect)" /> {{ deleteInfo = getDeleteIconInfo()}}
-                
+                <!-- 删除图标 -->
                 <image xlink:href="../assets/delete.svg" class="delete" v-if="deleteInfo" @click.stop="remove" :x="deleteInfo.x" :y="deleteInfo.y" :width="deleteInfo.r" :height="deleteInfo.r"/>
             </svg>
         </div>
@@ -403,12 +409,12 @@ export default {
             };
         },
         // 节点双击事件
-        nodeDblClient(node) {
-            console.log(node);
+        nodeDblClick(node) {
+            alert('nodeid:'+node.id);
         },
         // 连接线双击事件
-        lineDblClient(line) {
-            console.log(line);
+        lineDblClick(line) {
+            alert('lineid:'+line.id);
         },
         // 获取鼠标事件当前位置的节点
         getMousePointNode(ev) {
@@ -428,11 +434,13 @@ export default {
             if (node.y + node.nodeHeight > this.paperHeight)
                 this.paperHeight *= 2;
         },
+        // 选择某个对象
         select(type, id) {
             this.switchMode(mode.select, "mode-select");
             this.tempData.currentSelect.type = type;
             this.tempData.currentSelect.id = id;
         },
+        // 画布单击
         paperClick(ev) {
             this.tempData.currentSelect.type = null;
             this.tempData.currentSelect.id = null;
@@ -449,6 +457,7 @@ export default {
                 });
             }
         },
+        // 移除某个对象
         remove() {
             if (
                 this.tempData.currentSelect.id &&
@@ -506,6 +515,7 @@ export default {
                 };
             }
         },
+        // 切换操作模式
         switchMode(mode, currentDivId, addNodeType, addNodeText) {
             this.tempData.mode.mode = mode;
             this.tempData.mode.currentDivId = currentDivId;

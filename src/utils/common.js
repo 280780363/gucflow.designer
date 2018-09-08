@@ -20,6 +20,9 @@ const common = {
       S4 ()
     );
   },
+  /**
+   * 数组原型扩展
+   */
   useArrayExtends () {
     // 数组原型扩展
     Array.prototype.remove = function (where) {
