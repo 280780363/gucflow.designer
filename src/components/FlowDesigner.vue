@@ -523,7 +523,7 @@ export default {
 
 <style lang="less" scoped>
 @unselectColor: rgb(49, 208, 198);
-@selectColor: #d9534f;
+@selectColor: #ea6f5a;
 
 .pointer {
     cursor: pointer;
