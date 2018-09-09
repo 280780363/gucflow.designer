@@ -212,7 +212,7 @@ export default {
     },
     mounted() {
         // 拖动时取消选择文本
-        document.getElementById('container').onselectstart = function() {
+        document.getElementById('designer').onselectstart = function() {
             return false;
         };
     },
