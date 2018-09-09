@@ -116,8 +116,12 @@ export default {
             tempData: {
                 dragData: {
                     nodeid: null,
+                    // 拖动开始的位置
                     sourceMouseX: null,
                     sourceMouseY: null,
+                    // 上一次记录的位置
+                    prevMouseX: null,
+                    prevMouseY: null,
                 },
                 // 正在连接的连接线
                 connectLine: {
@@ -309,6 +313,8 @@ export default {
             this.tempData.dragData.nodeid = this.getMousePointNode(ev).id;
             this.tempData.dragData.sourceMouseX = ev.screenX;
             this.tempData.dragData.sourceMouseY = ev.screenY;
+            this.tempData.dragData.prevMouseX = ev.screenX;
+            this.tempData.dragData.prevMouseY = ev.screenY;
         },
         beginConnect(ev) {
             this.tempData.connectLine.nodeId = this.getMousePointNode(ev).id;
@@ -317,8 +323,8 @@ export default {
         dragMoving(ev) {
             if (!this.tempData.dragData.nodeid) return;
             // 鼠标偏移量
-            let offsetX = ev.screenX - this.tempData.dragData.sourceMouseX;
-            let offsetY = ev.screenY - this.tempData.dragData.sourceMouseY;
+            let offsetX = ev.screenX - this.tempData.dragData.prevMouseX;
+            let offsetY = ev.screenY - this.tempData.dragData.prevMouseY;
             // 拖动范围小于5 不处理
             if (Math.abs(offsetX) + Math.abs(offsetY) < 5) return;
             let node = this.nodes.find(
@@ -329,8 +335,8 @@ export default {
             node.y += offsetY;
             this.extendPaperIfNeed(node);
             // 重置鼠标位置
-            this.tempData.dragData.sourceMouseX = ev.screenX;
-            this.tempData.dragData.sourceMouseY = ev.screenY;
+            this.tempData.dragData.prevMouseX = ev.screenX;
+            this.tempData.dragData.prevMouseY = ev.screenY;
         },
         // 拖动完成
         dragDrop() {
@@ -338,6 +344,8 @@ export default {
             this.tempData.dragData.nodeid = null;
             this.tempData.dragData.sourceMouseX = null;
             this.tempData.dragData.sourceMouseY = null;
+            this.tempData.dragData.prevMouseX = null;
+            this.tempData.dragData.prevMouseY = null;
         },
         // 连接移动
         connectMoving(ev) {
