@@ -46,21 +46,23 @@
                 </defs>
                 <!-- 节点 -->
                 <g v-for="item in nodes" :key="'node'+item.id" :id="item.id" cursor="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove($event)" @mouseup="select('node',item.id,$event)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
-                    <NormalNode v-if="item.type=='normal'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</NormalNode>
-                    <StartNode v-if="item.type=='start'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</StartNode>
-                    <StopNode v-if="item.type=='stop'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</StopNode>
-                    <SwitchBeginNode v-if="item.type=='switchBegin'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</SwitchBeginNode>
-                    <SwitchEndNode v-if="item.type=='switchEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</SwitchEndNode>
-                    <SwitchBeginAndEnd v-if="item.type=='switchBeginAndEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</SwitchBeginAndEnd>
-                    <Subflow v-if="item.type=='subflow'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</Subflow>
+                    <title>{{item.text}}</title>
+                    <NormalNode v-if="item.type=='normal'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</NormalNode>
+                    <StartNode v-if="item.type=='start'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</StartNode>
+                    <StopNode v-if="item.type=='stop'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</StopNode>
+                    <SwitchBeginNode v-if="item.type=='switchBegin'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</SwitchBeginNode>
+                    <SwitchEndNode v-if="item.type=='switchEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</SwitchEndNode>
+                    <SwitchBeginAndEnd v-if="item.type=='switchBeginAndEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</SwitchBeginAndEnd>
+                    <Subflow v-if="item.type=='subflow'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</Subflow>
                 </g>
                 <!-- 连线 -->
                 <g v-for="item in lines" :key="'line'+item.id" cursor="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     {{ lineData = getLineInfo(item)}}
+                    <title>{{item.text}}</title>
                     <path :d="lineData.path" fill="none" stroke="transparent" stroke-width="10" />
                     <path :d="lineData.path" fill="none" stroke-width="2" :marker-end="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'url(#arrow-select)':'url(#arrow-unselect)'" />
                     <text :x="lineData.textx" :y="lineData.texty">
-                        {{item.text}}
+                        {{item.text.substringIfTooLong(12)}}
                     </text>
                 </g>
                 <!-- 动态连线 -->
@@ -81,7 +83,7 @@ import SwitchEndNode from './switchEnd.vue';
 import SwitchBeginAndEnd from './switchBeginAndEnd.vue';
 import Subflow from './subflow.vue';
 
-common.useArrayExtends();
+common.useExtends();
 const mode = {
     select: 'select',
     connect: 'connect',
@@ -166,7 +168,7 @@ export default {
                 {
                     id: '4',
                     type: nodeType.switchEnd,
-                    text: '董事长审批',
+                    text: '董事长审批董事长审批',
                     x: 500,
                     y: 200,
                     nodeWidth: 100,
