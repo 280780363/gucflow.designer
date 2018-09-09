@@ -55,7 +55,7 @@
                     <Subflow v-if="item.type=='subflow'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text}}</Subflow>
                 </g>
                 <!-- 连线 -->
-                <g v-for="item in lines" :key="'line'+item.id" class="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
+                <g v-for="item in lines" :key="'line'+item.id" cursor="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     {{ lineData = getLineInfo(item)}}
                     <path :d="lineData.path" fill="none" stroke="transparent" stroke-width="10" />
                     <path :d="lineData.path" fill="none" stroke-width="2" :marker-end="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'url(#arrow-select)':'url(#arrow-unselect)'" />
@@ -296,7 +296,6 @@ export default {
                 this.connectMoving(ev);
         },
         drop(ev) {
-            debugger;
             if (this.tempData.mode.mode == mode.select) this.dragDrop(ev);
             else if (this.tempData.mode.mode == mode.connect)
                 this.connectDrop(ev);
@@ -333,7 +332,6 @@ export default {
         },
         // 拖动完成
         dragDrop() {
-            debugger;
             // 拖动完成 情况拖动数据
             this.tempData.dragData.nodeid = null;
             this.tempData.dragData.sourceMouseX = null;
@@ -437,10 +435,11 @@ export default {
         },
         // 选择某个对象
         select(type, id, ev) {
-            debugger;
             if (
-                ev.screenX == this.tempData.dragData.sourceMouseX &&
-                ev.screenY == this.tempData.dragData.sourceMouseY
+                !this.tempData.dragData.sourceMouseX ||
+                !this.tempData.dragData.sourceMouseY ||
+                (ev.screenX == this.tempData.dragData.sourceMouseX &&
+                    ev.screenY == this.tempData.dragData.sourceMouseY)
             ) {
                 this.switchMode(mode.select, 'mode-select');
                 this.tempData.currentSelect.type = type;
@@ -506,7 +505,7 @@ export default {
 
                 return {
                     x: node.x + node.nodeWidth / 2,
-                    y: node.y - node.nodeHeight / 2-r,
+                    y: node.y - node.nodeHeight / 2 - r,
                     r: r,
                 };
             } else if (this.tempData.currentSelect.type == 'line') {
