@@ -168,7 +168,7 @@ export default {
                 {
                     id: '4',
                     type: nodeType.switchEnd,
-                    text: '董事长审批董事长审批',
+                    text: '董事长审批啊啊啊啊啊啊',
                     x: 500,
                     y: 200,
                     nodeWidth: 100,
