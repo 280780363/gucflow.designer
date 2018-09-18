@@ -2,40 +2,35 @@
     <div id="designer">
         <!-- 工具栏 -->
         <div id="toolbar">
-            <div @click="switchMode('select','mode-select')" id="mode-select" :class="{active:tempData.mode.currentDivId=='mode-select'}">
+            <div @click="switchMode(enums.mode.select)" :class="{active:tempData.mode.current==enums.mode.select}">
                 <img src="../assets/mouse.svg">
                 <p>选择</p>
             </div>
-            <div @click="switchMode('connect','mode-connect')" id="mode-connect" :class="{active:tempData.mode.currentDivId=='mode-connect'}">
+            <div @click="switchMode(enums.mode.connect)" :class="{active:tempData.mode.current==enums.mode.connect}">
                 <img src="../assets/connect.svg">
                 <p>连接</p>
             </div>
             <hr/>
-            <div @click="switchMode('addNode','mode-add-normal','normal','任务')" id="mode-add-normal" :class="{active:tempData.mode.currentDivId=='mode-add-normal'}">
+            <div @click="switchMode(enums.mode.addNode_task)" :id="enums.mode.addNode_task" :nodetype="enums.nodeType.task" :class="{active:tempData.mode.current==enums.mode.addNode_task}">
                 <img src="../assets/users1.svg">
                 <p>任务</p>
             </div>
-            <div @click="switchMode('addNode','mode-add-switchBegin','switchBegin','分支')" id="mode-add-switchBegin" :class="{active:tempData.mode.currentDivId=='mode-add-switchBegin'}">
+            <div @click="switchMode(enums.mode.addNode_parallel)" :id="enums.mode.addNode_parallel" :nodetype="enums.nodeType.task" :class="{active:tempData.mode.current==enums.mode.addNode_parallel}">
                 <img src="../assets/branch.svg">
                 <p>分支</p>
             </div>
-            <div @click="switchMode('addNode','mode-add-switchEnd','switchEnd','合并')" id="mode-add-switchEnd" :class="{active:tempData.mode.currentDivId=='mode-add-switchEnd'}">
+            <div @click="switchMode(enums.mode.addNode_merge)" :id="enums.mode.addNode_merge" :nodetype="enums.nodeType.task" :class="{active:tempData.mode.current==enums.mode.addNode_merge}">
                 <img src="../assets/merge.svg">
                 <p>合并</p>
             </div>
-            <div @click="switchMode('addNode','mode-add-switchBeginAndEnd','switchBeginAndEnd','分支合并')" id="mode-add-switchBeginAndEnd" :class="{active:tempData.mode.currentDivId=='mode-add-switchBeginAndEnd'}">
-                <img src="../assets/switchBeginAndEnd.svg">
-                <p>分支合并</p>
-            </div>
-            <div @click="switchMode('addNode','mode-add-subflow','subflow','子流程')" id="mode-add-subflow" :class="{active:tempData.mode.currentDivId=='mode-add-subflow'}">
+            <div @click="switchMode(enums.mode.addNode_subflow)" :id="enums.mode.addNode_subflow" :nodetype="enums.nodeType.task" :class="{active:tempData.mode.current==enums.mode.addNode_subflow}">
                 <img src="../assets/subflow.svg">
                 <p>子流程</p>
             </div>
         </div>
         <div id="container">
-
             <!-- 画布 -->
-            <svg :width="paperWidth" :height="paperHeight" id="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving($event)" @mouseup="drop($event)" @click.stop="paperClick">
+            <svg :width="flowData.paperWidth" @keyup.46="remove" tabindex="0" :height="flowData.paperHeight" id="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving($event)" @mouseup="drop($event)" @click.stop="paperClick">
                 <defs>
                     <marker id="arrow-unselect" orient="auto" overflow="visible" markerUnits="userSpaceOnUse">
                         <path stroke="none" class='unselect' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
@@ -45,18 +40,17 @@
                     </marker>
                 </defs>
                 <!-- 节点 -->
-                <g v-for="item in nodes" :key="'node'+item.id" :id="item.id" cursor="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove($event)" @mouseup="select('node',item.id,$event)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
+                <g v-for="item in flowData.nodes" :key="'node'+item.id" :id="item.id" cursor="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove($event)" @mouseup="select('node',item.id,$event)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     <title>{{item.text}}</title>
-                    <NormalNode v-if="item.type=='normal'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</NormalNode>
+                    <TaskNode v-if="item.type=='normal'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</TaskNode>
                     <StartNode v-if="item.type=='start'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</StartNode>
                     <StopNode v-if="item.type=='stop'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</StopNode>
-                    <SwitchBeginNode v-if="item.type=='switchBegin'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</SwitchBeginNode>
-                    <SwitchEndNode v-if="item.type=='switchEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</SwitchEndNode>
-                    <SwitchBeginAndEnd v-if="item.type=='switchBeginAndEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</SwitchBeginAndEnd>
-                    <Subflow v-if="item.type=='subflow'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</Subflow>
+                    <ParallelNode v-if="item.type=='switchBegin'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</ParallelNode>
+                    <MergeNode v-if="item.type=='switchEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</MergeNode>
+                    <SubflowNode v-if="item.type=='subflow'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</SubflowNode>
                 </g>
                 <!-- 连线 -->
-                <g v-for="item in lines" :key="'line'+item.id" cursor="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
+                <g v-for="item in flowData.lines" :key="'line'+item.id" cursor="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     {{ lineData = getLineInfo(item)}}
                     <title>{{item.text}}</title>
                     <path :d="lineData.path" fill="none" stroke="transparent" stroke-width="10" />
@@ -66,53 +60,58 @@
                     </text>
                 </g>
                 <!-- 动态连线 -->
-                <path :d="tempData.connectLine.path" v-if="tempData.connectLine.path" fill="none" class="unselect" stroke-width="2" marker-end="url(#arrow-unselect)" /> {{ deleteInfo = getDeleteIconInfo()}}
-                <!-- 删除图标 -->
-                <image xlink:href="../assets/delete.svg" class="delete" v-if="deleteInfo" @click.stop="remove" :x="deleteInfo.x" :y="deleteInfo.y" :width="deleteInfo.r" :height="deleteInfo.r" />
+                <path :d="tempData.connectLine.path" v-if="tempData.connectLine.path" fill="none" class="unselect" stroke-width="2" marker-end="url(#arrow-unselect)" />
             </svg>
         </div>
     </div>
 </template>
 <script>
 import common from '../utils/common.js';
-import NormalNode from './normal.vue';
-import StartNode from './start.vue';
-import StopNode from './stop.vue';
-import SwitchBeginNode from './switchBegin.vue';
-import SwitchEndNode from './switchEnd.vue';
-import SwitchBeginAndEnd from './switchBeginAndEnd.vue';
-import Subflow from './subflow.vue';
+import TaskNode from './nodes/task.vue';
+import StartNode from './nodes/start.vue';
+import StopNode from './nodes/stop.vue';
+import ParallelNode from './nodes/parallel.vue';
+import MergeNode from './nodes/merge.vue';
+import SubflowNode from './nodes/subflow.vue';
 
 common.useExtends();
-const mode = {
-    select: 'select',
-    connect: 'connect',
-    addNode: 'addNode',
-};
-const nodeType = {
-    start: 'start', //开始
-    stop: 'stop', //结束
-    normal: 'normal', //普通类型
-    switchBegin: 'switchBegin', //并行分支开始
-    switchEnd: 'switchEnd', //并行分支结束
-    switchBeginAndEnd: 'switchBeginAndEnd',
-    subflow: 'subflow',
-};
 
 export default {
     components: {
-        NormalNode,
+        TaskNode,
         StartNode,
         StopNode,
-        SwitchBeginNode,
-        SwitchEndNode,
-        SwitchBeginAndEnd,
-        Subflow,
+        ParallelNode,
+        MergeNode,
+        SubflowNode,
     },
     data() {
         return {
-            paperWidth: 1000,
-            paperHeight: 600,
+            enums: {
+                mode: {
+                    // 操作模式
+                    select: 'select', // 选择
+                    connect: 'connect', // 连接
+                    addNode_task: 'addNode-task', // 新增任务
+                    addNode_parallel: 'addNode-parallel', // 新增并行分支
+                    addNode_merge: 'addNode-merge', // 新增合并
+                    addNode_subflow: 'addNode-subflow', // 新增子流程
+                },
+                nodeType: {
+                    // 节点类型
+                    start: 'start', //开始
+                    stop: 'stop', //结束
+                    task: 'task', //普通类型
+                    parallel: 'parallel', //并行分支开始
+                    merge: 'merge', //并行分支合并
+                    subflow: 'subflow',
+                },
+                // 元素类型
+                eleType: {
+                    node: 'node',
+                    line: 'line',
+                },
+            },
             tempData: {
                 dragData: {
                     nodeid: null,
@@ -133,88 +132,98 @@ export default {
                     type: null,
                     id: null,
                 },
-                // 当前新增的节点类型数据
                 mode: {
-                    currentDivId: 'mode-select',
-                    addNodeType: null,
-                    addNodeText: null,
-                    mode: mode.select,
+                    current: 'select',
+                },
+                // 撤销数据
+                undoData: [],
+                // 复制数据
+                copyData: {
+                    nodeId: null,
                 },
             },
-            nodes: [
-                {
-                    id: '1',
-                    type: nodeType.start,
-                    text: '开始',
-                    x: 150,
-                    y: 50,
-                    nodeWidth: 100,
-                    nodeHeight: 50,
-                },
-                {
-                    id: '2',
-                    type: nodeType.normal,
-                    text: '经理审批',
-                    x: 300,
-                    y: 150,
-                    nodeWidth: 100,
-                    nodeHeight: 50,
-                },
-                {
-                    id: '3',
-                    type: nodeType.switchBegin,
-                    text: '总监审批',
-                    x: 500,
-                    y: 50,
-                    nodeWidth: 100,
-                    nodeHeight: 50,
-                },
-                {
-                    id: '4',
-                    type: nodeType.switchEnd,
-                    text: '董事长审批啊啊啊啊啊啊',
-                    x: 500,
-                    y: 200,
-                    nodeWidth: 100,
-                    nodeHeight: 50,
-                },
-                {
-                    id: '5',
-                    type: nodeType.stop,
-                    text: '结束',
-                    x: 500,
-                    y: 300,
-                    nodeWidth: 100,
-                    nodeHeight: 50,
-                },
-            ],
-            lines: [
-                {
-                    id: '1',
-                    from: '1',
-                    to: '2',
-                    text: '开始到经理',
-                },
-                {
-                    id: '2',
-                    from: '2',
-                    to: '3',
-                    text: '经理到总监',
-                },
-                {
-                    id: '3',
-                    from: '3',
-                    to: '4',
-                    text: '总监到董事长',
-                },
-                {
-                    id: '4',
-                    from: '4',
-                    to: '5',
-                    text: '董事长到结束',
-                },
-            ],
+            flowData: {
+                paperWidth: 1000,
+                paperHeight: 600,
+                nodes: [
+                    {
+                        id: '1',
+                        type: 'start',
+                        text: '开始',
+                        x: 150,
+                        y: 50,
+                        nodeWidth: 100,
+                        nodeHeight: 50,
+                    },
+                    {
+                        id: '2',
+                        type: 'task',
+                        text: '经理审批',
+                        x: 300,
+                        y: 150,
+                        nodeWidth: 100,
+                        nodeHeight: 50,
+                    },
+                    {
+                        id: '3',
+                        type: 'parallel',
+                        text: '总监审批',
+                        x: 500,
+                        y: 50,
+                        nodeWidth: 100,
+                        nodeHeight: 50,
+                    },
+                    {
+                        id: '4',
+                        type: 'merge',
+                        text: '董事长审批啊啊啊啊啊啊',
+                        x: 500,
+                        y: 200,
+                        nodeWidth: 100,
+                        nodeHeight: 50,
+                    },
+                    {
+                        id: '5',
+                        type: 'stop',
+                        text: '结束',
+                        x: 500,
+                        y: 300,
+                        nodeWidth: 100,
+                        nodeHeight: 50,
+                    },
+                ],
+                lines: [
+                    {
+                        id: '1',
+                        from: '1',
+                        to: '2',
+                        text: '开始到经理',
+                    },
+                    {
+                        id: '2',
+                        from: '2',
+                        to: '3',
+                        text: '经理到总监',
+                    },
+                    {
+                        id: '3',
+                        from: '3',
+                        to: '4',
+                        text: '总监到董事长',
+                    },
+                    {
+                        id: '4',
+                        from: '4',
+                        to: '5',
+                        text: '董事长到结束',
+                    },
+                ],
+            },
         };
+    },
+    created() {
+        // 枚举设为只读
+        this.enums.readonly();
     },
     mounted() {
         // 拖动时取消选择文本
@@ -225,8 +234,8 @@ export default {
     methods: {
         // 获取连接线 具体的path属性以及文本位置
         getLineInfo(line) {
-            let fromNode = this.nodes.find(r => r.id == line.from);
-            let toNode = this.nodes.find(r => r.id == line.to);
+            let fromNode = this.flowData.nodes.find(r => r.id == line.from);
+            let toNode = this.flowData.nodes.find(r => r.id == line.to);
             // 上 下 左 右
             let fromPoints = [
                 {x: fromNode.x, y: fromNode.y - fromNode.nodeHeight / 2},
@@ -290,20 +299,22 @@ export default {
         },
         beginMove(ev) {
             // 开始拖动 记录拖动数据
-            if (this.tempData.mode.mode == mode.select) {
+            if (this.tempData.mode.mode == this.enums.mode.select) {
                 this.beginDrag(ev);
-            } else if (this.tempData.mode.mode == mode.connect) {
+            } else if (this.tempData.mode.mode == this.enums.mode.connect) {
                 this.beginConnect(ev);
             }
         },
         moving(ev) {
-            if (this.tempData.mode.mode == mode.select) this.dragMoving(ev);
-            else if (this.tempData.mode.mode == mode.connect)
+            if (this.tempData.mode.current == this.enums.mode.select)
+                this.dragMoving(ev);
+            else if (this.tempData.mode.current == this.enums.mode.connect)
                 this.connectMoving(ev);
         },
         drop(ev) {
-            if (this.tempData.mode.mode == mode.select) this.dragDrop(ev);
-            else if (this.tempData.mode.mode == mode.connect)
+            if (this.tempData.mode.current == this.enums.mode.select)
+                this.dragDrop(ev);
+            else if (this.tempData.mode.current == this.enums.mode.connect)
                 this.connectDrop(ev);
         },
         beginDrag(ev) {
@@ -327,7 +338,7 @@ export default {
             let offsetY = ev.screenY - this.tempData.dragData.prevMouseY;
             // 拖动范围小于5 不处理
             if (Math.abs(offsetX) + Math.abs(offsetY) < 5) return;
-            let node = this.nodes.find(
+            let node = this.flowData.nodes.find(
                 r => r.id == this.tempData.dragData.nodeid
             );
             if (!node) return;
@@ -349,7 +360,7 @@ export default {
         },
         // 连接移动
         connectMoving(ev) {
-            let node = this.nodes.find(
+            let node = this.flowData.nodes.find(
                 r => r.id == this.tempData.connectLine.nodeId
             );
             if (!node) return;
@@ -395,7 +406,7 @@ export default {
         connectDrop(ev) {
             let targetNode = this.getMousePointNode(ev);
             if (targetNode) {
-                let exists = this.lines.some(
+                let exists = this.flowData.lines.some(
                     r =>
                         r.from == this.tempData.connectLine.nodeId &&
                         r.to == targetNode.id
@@ -404,7 +415,7 @@ export default {
                     !exists &&
                     this.tempData.connectLine.nodeId != targetNode.id
                 ) {
-                    this.lines.push({
+                    this.flowData.lines.push({
                         id: common.guid(),
                         from: this.tempData.connectLine.nodeId,
                         to: targetNode.id,
@@ -429,7 +440,7 @@ export default {
         getMousePointNode(ev) {
             let x = ev.offsetX;
             let y = ev.offsetY;
-            return this.nodes.find(
+            return this.flowData.nodes.find(
                 r =>
                     x >= r.x - r.nodeWidth / 2 &&
                     x <= r.x + r.nodeWidth / 2 &&
@@ -439,9 +450,10 @@ export default {
         },
         extendPaperIfNeed(node) {
             // 正在拖动,且拖出画布范围,将画布尺寸*2
-            if (node.x + node.nodeWidth > this.paperWidth) this.paperWidth *= 2;
-            if (node.y + node.nodeHeight > this.paperHeight)
-                this.paperHeight *= 2;
+            if (node.x + node.nodeWidth > this.flowData.paperWidth)
+                this.flowData.paperWidth *= 2;
+            if (node.y + node.nodeHeight > this.flowData.paperHeight)
+                this.flowData.paperHeight *= 2;
         },
         // 选择某个对象
         select(type, id, ev) {
@@ -452,7 +464,7 @@ export default {
                 (ev.screenX == this.tempData.dragData.sourceMouseX &&
                     ev.screenY == this.tempData.dragData.sourceMouseY)
             ) {
-                this.switchMode(mode.select, 'mode-select');
+                this.switchMode(this.enums.mode.select);
                 this.tempData.currentSelect.type = type;
                 this.tempData.currentSelect.id = id;
             }
@@ -463,11 +475,23 @@ export default {
             this.tempData.currentSelect.type = null;
             this.tempData.currentSelect.id = null;
             // 新增节点模式
-            if (this.tempData.mode.mode == mode.addNode) {
-                this.nodes.push({
+            if (
+                this.tempData.mode.current ==
+                    this.enums.nodeType.addNode_task ||
+                this.tempData.mode.current ==
+                    this.enums.nodeType.addNode_parallel ||
+                this.tempData.mode.current ==
+                    this.enums.nodeType.addNode_merge ||
+                this.tempData.mode.current ==
+                    this.enums.nodeType.addNode_subflow
+            ) {
+                var $div = document.getElementById(this.tempData.mode.current);
+                var text = $div.children('p').innerText;
+                var nodeType = $div.attributes('nodetype');
+                this.flowData.nodes.push({
                     id: common.guid(),
-                    type: this.tempData.mode.addNodeType,
-                    text: this.tempData.mode.addNodeText || '新步骤',
+                    type: nodeType,
+                    text: text,
                     x: ev.offsetX,
                     y: ev.offsetY,
                     nodeWidth: 100,
@@ -481,65 +505,34 @@ export default {
                 this.tempData.currentSelect.id &&
                 this.tempData.currentSelect.type
             ) {
-                if (this.tempData.currentSelect.type == 'node') {
+                if (
+                    this.tempData.currentSelect.type == this.enums.eleType.node
+                ) {
                     // 删除响应的连接线
-                    this.lines.remove(
+                    this.flowData.lines.remove(
                         r => r.from == this.tempData.currentSelect.id
                     );
-                    this.lines.remove(
+                    this.flowData.lines.remove(
                         r => r.to == this.tempData.currentSelect.id
                     );
                     // 删除节点
-                    this.nodes.remove(
+                    this.flowData.nodes.remove(
                         r => r.id == this.tempData.currentSelect.id
                     );
-                } else if (this.tempData.currentSelect.type == 'line') {
-                    this.lines.remove(
+                } else if (
+                    this.tempData.currentSelect.type == this.enums.eleType.line
+                ) {
+                    this.flowData.lines.remove(
                         r => r.id == this.tempData.currentSelect.id
                     );
                 }
             }
         },
-        // 获取删除图标位置信息
-        getDeleteIconInfo() {
-            if (
-                !this.tempData.currentSelect.id ||
-                !this.tempData.currentSelect.type
-            )
-                return null;
-            if (this.tempData.currentSelect.type == 'node') {
-                let node = this.nodes.find(
-                    r => r.id == this.tempData.currentSelect.id
-                );
-                if (!node) return null;
-                let r = (node.nodeWidth + node.nodeHeight) * 0.2;
-
-                return {
-                    x: node.x + node.nodeWidth / 2,
-                    y: node.y - node.nodeHeight / 2 - r,
-                    r: r,
-                };
-            } else if (this.tempData.currentSelect.type == 'line') {
-                let line = this.lines.find(
-                    r => r.id == this.tempData.currentSelect.id
-                );
-                if (!line) return null;
-                let r = 32;
-                let lineInfo = this.getLineInfo(line);
-                return {
-                    x: lineInfo.textx + 9,
-                    y: lineInfo.texty + 4,
-                    r: r,
-                };
-            }
-        },
         // 切换操作模式
-        switchMode(mode, currentDivId, addNodeType, addNodeText) {
-            this.tempData.mode.mode = mode;
-            this.tempData.mode.currentDivId = currentDivId;
-            this.tempData.mode.addNodeType = addNodeType;
-            this.tempData.mode.addNodeText = addNodeText;
+        switchMode(mode) {
+            this.tempData.mode.current = mode;
         },
+        copyNode() {},
     },
 };
 </script>

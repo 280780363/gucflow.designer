@@ -23,7 +23,7 @@ const common = {
     );
   },
   /**
-   * 数组原型扩展
+   * 原型扩展
    */
   useExtends () {
     /**
@@ -45,6 +45,19 @@ const common = {
       if (!this) return '';
       if (this.length <= length) return this;
       return this.substring (0, length) + '...';
+    };
+
+    /**
+     * 对象设为只读
+     */
+    Object.prototype.readonly = function () {
+      if (!this) return;
+      if (typeof this != 'object') return;
+      Object.freeze (this);
+      for (let key in this) {
+        if (typeof this[key] === 'object') Object.freeze (this[key]);
+        this[key].readonly();
+      }
     };
   },
 };
