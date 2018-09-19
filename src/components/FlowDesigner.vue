@@ -30,7 +30,7 @@
         </div>
         <div id="container">
             <!-- 画布 -->
-            <svg :width="flowData.paperWidth" @keyup.46="remove" tabindex="0" :height="flowData.paperHeight" id="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving($event)" @mouseup="drop($event)" @click.stop="paperClick">
+            <svg :width="flowData.paperWidth" @keyup.46="remove" tabindex="0" :height="flowData.paperHeight" id="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving()" @mouseup="drop()" @click.stop="paperClick">
                 <defs>
                     <marker id="arrow-unselect" orient="auto" overflow="visible" markerUnits="userSpaceOnUse">
                         <path stroke="none" class='unselect' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
@@ -40,14 +40,14 @@
                     </marker>
                 </defs>
                 <!-- 节点 -->
-                <g v-for="item in flowData.nodes" :key="'node'+item.id" :id="item.id" cursor="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove($event)" @mouseup="select('node',item.id,$event)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
+                <g v-for="item in flowData.nodes" :key="'node'+item.id" :id="item.id" cursor="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove()" @mouseup="select('node',item.id,$event)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     <title>{{item.text}}</title>
-                    <TaskNode v-if="item.type=='normal'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</TaskNode>
-                    <StartNode v-if="item.type=='start'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</StartNode>
-                    <StopNode v-if="item.type=='stop'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</StopNode>
-                    <ParallelNode v-if="item.type=='switchBegin'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</ParallelNode>
-                    <MergeNode v-if="item.type=='switchEnd'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</MergeNode>
-                    <SubflowNode v-if="item.type=='subflow'" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</SubflowNode>
+                    <TaskNode v-if="item.type==enums.nodeType.task" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y"> 额</TaskNode>
+                    <!-- <StartNode v-if="item.type==enums.nodeType.start" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y"></StartNode>
+                    <StopNode v-if="item.type==enums.nodeType.stop" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y"></StopNode>
+                    <ParallelNode v-if="item.type==enums.nodeType.parallel" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y"></ParallelNode>
+                    <MergeNode v-if="item.type==enums.nodeType.merge" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y"></MergeNode>
+                    <SubflowNode v-if="item.type==enums.nodeType.subflow" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y"></SubflowNode> -->
                 </g>
                 <!-- 连线 -->
                 <g v-for="item in flowData.lines" :key="'line'+item.id" cursor="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
