@@ -32,7 +32,7 @@ const common = {
     Object.freeze(obj);
     for (let key in obj) {
       if (typeof obj[key] === 'object') Object.freeze(obj[key]);
-      obj[key].readonly();
+      common.readonly(obj[key]);
     }
   },
   /**

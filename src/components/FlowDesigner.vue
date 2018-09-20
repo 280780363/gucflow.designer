@@ -30,7 +30,7 @@
         </div>
         <div id="container">
             <!-- 画布 -->
-            <svg :width="flowData.paperWidth" @keyup.46="remove" tabindex="0" :height="flowData.paperHeight" id="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving()" @mouseup="drop()" @click.stop="paperClick">
+            <svg :width="flowData.paperWidth" @keyup.46="remove" tabindex="0" :height="flowData.paperHeight" id="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving" @mouseup="drop" @click.stop="paperClick">
                 <defs>
                     <marker id="arrow-unselect" orient="auto" overflow="visible" markerUnits="userSpaceOnUse">
                         <path stroke="none" class='unselect' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
@@ -40,7 +40,7 @@
                     </marker>
                 </defs>
                 <!-- 节点 -->
-                <g v-for="item in flowData.nodes" :key="'node'+item.id" :id="item.id" cursor="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove()" @mouseup="select('node',item.id,$event)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
+                <g v-for="item in flowData.nodes" :key="'node'+item.id" :id="item.id" cursor="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove" @mouseup="select('node',item.id,$event)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     <title>{{item.text}}</title>
                     <TaskNode v-if="item.type==enums.nodeType.task" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</TaskNode>
                     <StartNode v-if="item.type==enums.nodeType.start" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</StartNode>
@@ -299,9 +299,9 @@ export default {
         },
         beginMove(ev) {
             // 开始拖动 记录拖动数据
-            if (this.tempData.mode.mode == this.enums.mode.select) {
+            if (this.tempData.mode.current == this.enums.mode.select) {
                 this.beginDrag(ev);
-            } else if (this.tempData.mode.mode == this.enums.mode.connect) {
+            } else if (this.tempData.mode.current == this.enums.mode.connect) {
                 this.beginConnect(ev);
             }
         },
