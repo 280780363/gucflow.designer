@@ -454,7 +454,7 @@ export default {
         },
         // 选择某个对象
         select(type, id, ev) {
-            // 使用mouseup作为点击事件,以免拖动时触发出发click,判断鼠标位置是否有变化,没有变化才是为单击
+            // 使用mouseup作为点击事件,以免拖动时触发click,判断鼠标位置是否有变化,没有变化才是为单击
             if (
                 !this.tempData.dragData.sourceMouseX ||
                 !this.tempData.dragData.sourceMouseY ||
