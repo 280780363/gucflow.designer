@@ -42,12 +42,13 @@
                 <!-- 节点 -->
                 <g v-for="item in flowData.nodes" :key="'node'+item.id" :id="item.id" cursor="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove" @mouseup="select('node',item.id,$event)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     <title>{{item.text}}</title>
-                    <TaskNode v-if="item.type==enums.nodeType.task" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</TaskNode>
-                    <StartNode v-if="item.type==enums.nodeType.start" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</StartNode>
-                    <StopNode v-if="item.type==enums.nodeType.stop" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</StopNode>
-                    <ParallelNode v-if="item.type==enums.nodeType.parallel" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</ParallelNode>
-                    <MergeNode v-if="item.type==enums.nodeType.merge" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</MergeNode>
-                    <SubflowNode v-if="item.type==enums.nodeType.subflow" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{item.text.substringIfTooLong(6)}}</SubflowNode>
+                    {{ shortText = item.text }}
+                    <TaskNode v-if="item.type==enums.nodeType.task" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{shortText}}</TaskNode>
+                    <StartNode v-if="item.type==enums.nodeType.start" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{shortText}}</StartNode>
+                    <StopNode v-if="item.type==enums.nodeType.stop" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{shortText}}</StopNode>
+                    <ParallelNode v-if="item.type==enums.nodeType.parallel" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{shortText}}</ParallelNode>
+                    <MergeNode v-if="item.type==enums.nodeType.merge" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{shortText}}</MergeNode>
+                    <SubflowNode v-if="item.type==enums.nodeType.subflow" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{shortText}}</SubflowNode>
                 </g>
                 <!-- 连线 -->
                 <g v-for="item in flowData.lines" :key="'line'+item.id" cursor="pointer" @dblclick="lineDblClick(item)" @click.stop="select('line',item.id)" :class="tempData.currentSelect.type=='line'&&tempData.currentSelect.id==item.id?'select':'unselect'">
@@ -75,7 +76,29 @@ import MergeNode from "./nodes/merge.vue";
 import SubflowNode from "./nodes/subflow.vue";
 
 common.useExtends();
-
+let mode = {
+        // 操作模式
+        select: "select", // 选择
+        connect: "connect", // 连接
+        addNode_task: "addNode-task", // 新增任务
+        addNode_parallel: "addNode-parallel", // 新增并行分支
+        addNode_merge: "addNode-merge", // 新增合并
+        addNode_subflow: "addNode-subflow" // 新增子流程
+    },
+    nodeType = {
+        // 节点类型
+        start: "start", //开始
+        stop: "stop", //结束
+        task: "task", //普通类型
+        parallel: "parallel", //并行分支开始
+        merge: "merge", //并行分支合并
+        subflow: "subflow"
+    },
+    // 元素类型
+    eleType = {
+        node: "node",
+        line: "line"
+    };
 export default {
     components: {
         TaskNode,
@@ -87,31 +110,7 @@ export default {
     },
     data() {
         return {
-            enums: {
-                mode: {
-                    // 操作模式
-                    select: "select", // 选择
-                    connect: "connect", // 连接
-                    addNode_task: "addNode-task", // 新增任务
-                    addNode_parallel: "addNode-parallel", // 新增并行分支
-                    addNode_merge: "addNode-merge", // 新增合并
-                    addNode_subflow: "addNode-subflow" // 新增子流程
-                },
-                nodeType: {
-                    // 节点类型
-                    start: "start", //开始
-                    stop: "stop", //结束
-                    task: "task", //普通类型
-                    parallel: "parallel", //并行分支开始
-                    merge: "merge", //并行分支合并
-                    subflow: "subflow"
-                },
-                // 元素类型
-                eleType: {
-                    node: "node",
-                    line: "line"
-                }
-            },
+            enums: { mode, nodeType, eleType },
             tempData: {
                 dragData: {
                     nodeid: null,
@@ -148,7 +147,7 @@ export default {
                 nodes: [
                     {
                         id: "1",
-                        type: "start",
+                        type: nodeType.start,
                         text: "开始",
                         x: 150,
                         y: 50,
@@ -157,7 +156,7 @@ export default {
                     },
                     {
                         id: "2",
-                        type: "task",
+                        type: nodeType.task,
                         text: "经理审批",
                         x: 300,
                         y: 150,
@@ -166,7 +165,7 @@ export default {
                     },
                     {
                         id: "3",
-                        type: "parallel",
+                        type: nodeType.parallel,
                         text: "总监审批",
                         x: 500,
                         y: 50,
@@ -175,7 +174,7 @@ export default {
                     },
                     {
                         id: "4",
-                        type: "merge",
+                        type: nodeType.merge,
                         text: "董事长审批啊啊啊啊啊啊",
                         x: 500,
                         y: 200,
@@ -184,7 +183,7 @@ export default {
                     },
                     {
                         id: "5",
-                        type: "stop",
+                        type: nodeType.stop,
                         text: "结束",
                         x: 500,
                         y: 300,
@@ -299,22 +298,20 @@ export default {
         },
         beginMove(ev) {
             // 开始拖动 记录拖动数据
-            if (this.tempData.mode.current == this.enums.mode.select) {
+            if (this.tempData.mode.current == mode.select) {
                 this.beginDrag(ev);
-            } else if (this.tempData.mode.current == this.enums.mode.connect) {
+            } else if (this.tempData.mode.current == mode.connect) {
                 this.beginConnect(ev);
             }
         },
         moving(ev) {
-            if (this.tempData.mode.current == this.enums.mode.select)
-                this.dragMoving(ev);
-            else if (this.tempData.mode.current == this.enums.mode.connect)
+            if (this.tempData.mode.current == mode.select) this.dragMoving(ev);
+            else if (this.tempData.mode.current == mode.connect)
                 this.connectMoving(ev);
         },
         drop(ev) {
-            if (this.tempData.mode.current == this.enums.mode.select)
-                this.dragDrop(ev);
-            else if (this.tempData.mode.current == this.enums.mode.connect)
+            if (this.tempData.mode.current == mode.select) this.dragDrop(ev);
+            else if (this.tempData.mode.current == mode.connect)
                 this.connectDrop(ev);
         },
         beginDrag(ev) {
@@ -464,7 +461,7 @@ export default {
                 (ev.screenX == this.tempData.dragData.sourceMouseX &&
                     ev.screenY == this.tempData.dragData.sourceMouseY)
             ) {
-                this.switchMode(this.enums.mode.select);
+                this.switchMode(mode.select);
                 this.tempData.currentSelect.type = type;
                 this.tempData.currentSelect.id = id;
             }
@@ -476,18 +473,14 @@ export default {
             this.tempData.currentSelect.id = null;
             // 新增节点模式
             if (
-                this.tempData.mode.current ==
-                    this.enums.nodeType.addNode_task ||
-                this.tempData.mode.current ==
-                    this.enums.nodeType.addNode_parallel ||
-                this.tempData.mode.current ==
-                    this.enums.nodeType.addNode_merge ||
-                this.tempData.mode.current ==
-                    this.enums.nodeType.addNode_subflow
+                this.tempData.mode.current == mode.addNode_task ||
+                this.tempData.mode.current == mode.addNode_parallel ||
+                this.tempData.mode.current == mode.addNode_merge ||
+                this.tempData.mode.current == mode.addNode_subflow
             ) {
-                var $div = document.getElementById(this.tempData.mode.current);
-                var text = $div.children("p").innerText;
-                var nodeType = $div.attributes("nodetype");
+                let $div = document.getElementById(this.tempData.mode.current);
+                let text = $div.getElementsByTagName("p")[0].innerText;
+                let nodeType = $div.getAttribute("nodetype");                
                 this.flowData.nodes.push({
                     id: common.guid(),
                     type: nodeType,
@@ -505,9 +498,7 @@ export default {
                 this.tempData.currentSelect.id &&
                 this.tempData.currentSelect.type
             ) {
-                if (
-                    this.tempData.currentSelect.type == this.enums.eleType.node
-                ) {
+                if (this.tempData.currentSelect.type == eleType.node) {
                     // 删除响应的连接线
                     this.flowData.lines.remove(
                         r => r.from == this.tempData.currentSelect.id
@@ -519,9 +510,7 @@ export default {
                     this.flowData.nodes.remove(
                         r => r.id == this.tempData.currentSelect.id
                     );
-                } else if (
-                    this.tempData.currentSelect.type == this.enums.eleType.line
-                ) {
+                } else if (this.tempData.currentSelect.type == eleType.line) {
                     this.flowData.lines.remove(
                         r => r.id == this.tempData.currentSelect.id
                     );
