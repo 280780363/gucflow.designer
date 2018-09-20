@@ -42,7 +42,7 @@
                 <!-- 节点 -->
                 <g v-for="item in flowData.nodes" :key="'node'+item.id" :id="item.id" cursor="pointer" @dblclick="nodeDblClick(item)" @mousedown.stop="beginMove" @mouseup="select('node',item.id,$event)" :class="tempData.currentSelect.type=='node'&&tempData.currentSelect.id==item.id?'select':'unselect'">
                     <title>{{item.text}}</title>
-                    {{ shortText = item.text }}
+                    {{ shortText = item.text.substringIfTooLong(6) }}
                     <TaskNode v-if="item.type==enums.nodeType.task" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{shortText}}</TaskNode>
                     <StartNode v-if="item.type==enums.nodeType.start" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{shortText}}</StartNode>
                     <StopNode v-if="item.type==enums.nodeType.stop" :width="item.nodeWidth" :height="item.nodeHeight" :x="item.x" :y="item.y">{{shortText}}</StopNode>
@@ -480,7 +480,7 @@ export default {
             ) {
                 let $div = document.getElementById(this.tempData.mode.current);
                 let text = $div.getElementsByTagName("p")[0].innerText;
-                let nodeType = $div.getAttribute("nodetype");                
+                let nodeType = $div.getAttribute("nodetype");
                 this.flowData.nodes.push({
                     id: common.guid(),
                     type: nodeType,
