@@ -60,6 +60,31 @@ const common = {
       return this.substring(0, length) + '...';
     };
   },
+  /**
+   * 深克隆对象或数组
+   * @param {object} obj 
+   */
+  clone(obj) {
+    let cloned = {};
+    for (let key in obj) {
+      if (typeof obj[key] != 'object')
+        // 值类型 复制
+        cloned[key] = obj[key]
+      else if (obj[key] instanceof Array) {
+        let cloneArray = [];
+        for (let i = 0; i < obj[key].length; i++) {
+          let current = obj[key][i];
+          if (typeof current != 'object')
+            cloneArray.push(current);
+          else
+            cloneArray.push(common.clone(current));
+        }
+        cloned[key] = cloneArray;
+      }
+      else cloned[key] = common.clone(obj[key]);
+    }
+    return cloned;
+  }
 };
 
 export default common;

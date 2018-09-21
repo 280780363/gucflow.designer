@@ -30,7 +30,7 @@
         </div>
         <div id="container">
             <!-- 画布 -->
-            <svg :width="flowData.paperWidth" @keyup.46="remove" tabindex="0" :height="flowData.paperHeight" id="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving" @mouseup="drop" @click.stop="paperClick">
+            <svg :width="flowData.paperWidth" @keyup.46="remove" @keyup.ctrl.67.exact="copy" @keyup.ctrl.86.exact="paste" tabindex="0" :height="flowData.paperHeight" id="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving" @mouseup="drop" @click.stop="paperClick">
                 <defs>
                     <marker id="arrow-unselect" orient="auto" overflow="visible" markerUnits="userSpaceOnUse">
                         <path stroke="none" class='unselect' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
@@ -135,9 +135,9 @@ export default {
                     current: "select"
                 },
                 // 撤销数据
-                undoData: [],
+                historyData: [],
                 // 复制数据
-                copyData: {
+                clipboard: {
                     nodeId: null
                 }
             },
@@ -521,7 +521,28 @@ export default {
         switchMode(mode) {
             this.tempData.mode.current = mode;
         },
-        copyNode() {}
+        // 复制节点
+        copy() {
+            if (this.tempData.currentSelect.type == eleType.node)
+                this.tempData.clipboard.nodeId = this.tempData.currentSelect.id;
+        },
+        // 粘贴
+        paste() {
+            if (this.tempData.clipboard.nodeId) {
+                var node = this.flowData.nodes.find(
+                    r => r.id == this.tempData.clipboard.nodeId
+                );
+                var cloneNode = common.clone(node);
+                cloneNode.x += 20;
+                cloneNode.y += 20;
+                cloneNode.id=common.guid();
+                this.flowData.nodes.push(cloneNode);
+            }
+        },
+        // 撤销
+        undo(){
+
+        }
     }
 };
 </script>
