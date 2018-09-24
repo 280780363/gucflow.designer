@@ -30,7 +30,7 @@
         </div>
         <div id="container">
             <!-- 画布 -->
-            <svg :width="flowData.paperWidth" @keyup.46="remove" @keyup.ctrl.67.exact="copy" @keyup.ctrl.86.exact="paste" tabindex="0" :height="flowData.paperHeight" id="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving" @mouseup="drop" @click.stop="paperClick">
+            <svg :width="flowData.paperWidth" @keyup.46="remove" @keyup.ctrl.67.exact="copy" @keyup.ctrl.86.exact="paste" @keyup.ctrl.90.exact="undo" tabindex="0" :height="flowData.paperHeight" id="paper" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" @mousemove="moving" @mouseup="drop" @click.stop="paperClick">
                 <defs>
                     <marker id="arrow-unselect" orient="auto" overflow="visible" markerUnits="userSpaceOnUse">
                         <path stroke="none" class='unselect' transform="rotate(180)" d="M 10 -5 0 0 10 5 z"></path>
@@ -67,37 +67,37 @@
     </div>
 </template>
 <script>
-import common from "../utils/common.js";
-import TaskNode from "./nodes/task.vue";
-import StartNode from "./nodes/start.vue";
-import StopNode from "./nodes/stop.vue";
-import ParallelNode from "./nodes/parallel.vue";
-import MergeNode from "./nodes/merge.vue";
-import SubflowNode from "./nodes/subflow.vue";
+import common from '../utils/common.js';
+import TaskNode from './nodes/task.vue';
+import StartNode from './nodes/start.vue';
+import StopNode from './nodes/stop.vue';
+import ParallelNode from './nodes/parallel.vue';
+import MergeNode from './nodes/merge.vue';
+import SubflowNode from './nodes/subflow.vue';
 
 common.useExtends();
 let mode = {
         // 操作模式
-        select: "select", // 选择
-        connect: "connect", // 连接
-        addNode_task: "addNode-task", // 新增任务
-        addNode_parallel: "addNode-parallel", // 新增并行分支
-        addNode_merge: "addNode-merge", // 新增合并
-        addNode_subflow: "addNode-subflow" // 新增子流程
+        select: 'select', // 选择
+        connect: 'connect', // 连接
+        addNode_task: 'addNode-task', // 新增任务
+        addNode_parallel: 'addNode-parallel', // 新增并行分支
+        addNode_merge: 'addNode-merge', // 新增合并
+        addNode_subflow: 'addNode-subflow', // 新增子流程
     },
     nodeType = {
         // 节点类型
-        start: "start", //开始
-        stop: "stop", //结束
-        task: "task", //普通类型
-        parallel: "parallel", //并行分支开始
-        merge: "merge", //并行分支合并
-        subflow: "subflow"
+        start: 'start', //开始
+        stop: 'stop', //结束
+        task: 'task', //普通类型
+        parallel: 'parallel', //并行分支开始
+        merge: 'merge', //并行分支合并
+        subflow: 'subflow',
     },
     // 元素类型
     eleType = {
-        node: "node",
-        line: "line"
+        node: 'node',
+        line: 'line',
     };
 export default {
     components: {
@@ -106,11 +106,11 @@ export default {
         StopNode,
         ParallelNode,
         MergeNode,
-        SubflowNode
+        SubflowNode,
     },
     data() {
         return {
-            enums: { mode, nodeType, eleType },
+            enums: {mode, nodeType, eleType},
             tempData: {
                 dragData: {
                     nodeid: null,
@@ -119,105 +119,105 @@ export default {
                     sourceMouseY: null,
                     // 上一次记录的位置
                     prevMouseX: null,
-                    prevMouseY: null
+                    prevMouseY: null,
                 },
                 // 正在连接的连接线
                 connectLine: {
                     path: null,
-                    nodeId: null
+                    nodeId: null,
                 },
                 // 当前已选择的对象
                 currentSelect: {
                     type: null,
-                    id: null
+                    id: null,
                 },
                 mode: {
-                    current: "select"
+                    current: 'select',
                 },
                 // 撤销数据
                 historyData: [],
                 // 复制数据
                 clipboard: {
-                    nodeId: null
-                }
+                    nodeId: null,
+                },
             },
             flowData: {
                 paperWidth: 1000,
                 paperHeight: 600,
                 nodes: [
                     {
-                        id: "1",
+                        id: '1',
                         type: nodeType.start,
-                        text: "开始",
+                        text: '开始',
                         x: 150,
                         y: 50,
                         nodeWidth: 100,
-                        nodeHeight: 50
+                        nodeHeight: 50,
                     },
                     {
-                        id: "2",
+                        id: '2',
                         type: nodeType.task,
-                        text: "经理审批",
+                        text: '经理审批',
                         x: 300,
                         y: 150,
                         nodeWidth: 100,
-                        nodeHeight: 50
+                        nodeHeight: 50,
                     },
                     {
-                        id: "3",
+                        id: '3',
                         type: nodeType.parallel,
-                        text: "总监审批",
+                        text: '总监审批',
                         x: 500,
                         y: 50,
                         nodeWidth: 100,
-                        nodeHeight: 50
+                        nodeHeight: 50,
                     },
                     {
-                        id: "4",
+                        id: '4',
                         type: nodeType.merge,
-                        text: "董事长审批啊啊啊啊啊啊",
+                        text: '董事长审批啊啊啊啊啊啊',
                         x: 500,
                         y: 200,
                         nodeWidth: 100,
-                        nodeHeight: 50
+                        nodeHeight: 50,
                     },
                     {
-                        id: "5",
+                        id: '5',
                         type: nodeType.stop,
-                        text: "结束",
+                        text: '结束',
                         x: 500,
                         y: 300,
                         nodeWidth: 100,
-                        nodeHeight: 50
-                    }
+                        nodeHeight: 50,
+                    },
                 ],
                 lines: [
                     {
-                        id: "1",
-                        from: "1",
-                        to: "2",
-                        text: "开始到经理"
+                        id: '1',
+                        from: '1',
+                        to: '2',
+                        text: '开始到经理',
                     },
                     {
-                        id: "2",
-                        from: "2",
-                        to: "3",
-                        text: "经理到总监"
+                        id: '2',
+                        from: '2',
+                        to: '3',
+                        text: '经理到总监',
                     },
                     {
-                        id: "3",
-                        from: "3",
-                        to: "4",
-                        text: "总监到董事长"
+                        id: '3',
+                        from: '3',
+                        to: '4',
+                        text: '总监到董事长',
                     },
                     {
-                        id: "4",
-                        from: "4",
-                        to: "5",
-                        text: "董事长到结束"
-                    }
-                ]
-            }
+                        id: '4',
+                        from: '4',
+                        to: '5',
+                        text: '董事长到结束',
+                    },
+                ],
+            },
         };
     },
     created() {
@@ -226,7 +226,7 @@ export default {
     },
     mounted() {
         // 拖动时取消选择文本
-        document.getElementById("designer").onselectstart = function() {
+        document.getElementById('designer').onselectstart = function() {
             return false;
         };
     },
@@ -237,29 +237,29 @@ export default {
             let toNode = this.flowData.nodes.find(r => r.id == line.to);
             // 上 下 左 右
             let fromPoints = [
-                { x: fromNode.x, y: fromNode.y - fromNode.nodeHeight / 2 },
+                {x: fromNode.x, y: fromNode.y - fromNode.nodeHeight / 2},
                 {
                     x: fromNode.x,
-                    y: fromNode.y + fromNode.nodeHeight / 2
+                    y: fromNode.y + fromNode.nodeHeight / 2,
                 },
-                { x: fromNode.x - fromNode.nodeWidth / 2, y: fromNode.y },
+                {x: fromNode.x - fromNode.nodeWidth / 2, y: fromNode.y},
                 {
                     x: fromNode.x + fromNode.nodeWidth / 2,
-                    y: fromNode.y
-                }
+                    y: fromNode.y,
+                },
             ];
 
             let toPoints = [
-                { x: toNode.x, y: toNode.y - toNode.nodeHeight / 2 },
+                {x: toNode.x, y: toNode.y - toNode.nodeHeight / 2},
                 {
                     x: toNode.x,
-                    y: toNode.y + toNode.nodeHeight / 2
+                    y: toNode.y + toNode.nodeHeight / 2,
                 },
-                { x: toNode.x - toNode.nodeWidth / 2, y: toNode.y },
+                {x: toNode.x - toNode.nodeWidth / 2, y: toNode.y},
                 {
                     x: toNode.x + toNode.nodeWidth / 2,
-                    y: toNode.y
-                }
+                    y: toNode.y,
+                },
             ];
 
             let lengArr = [];
@@ -274,7 +274,7 @@ export default {
                     lengArr.push({
                         fromIndex: i,
                         toIndex: j,
-                        length: length
+                        length: length,
                     });
                 }
             }
@@ -293,7 +293,7 @@ export default {
                 fromx,
                 fromy,
                 tox,
-                toy
+                toy,
             };
         },
         beginMove(ev) {
@@ -317,6 +317,8 @@ export default {
         beginDrag(ev) {
             let node = this.getMousePointNode(ev);
             if (!node) console.error(ev);
+            // 添加到更改历史
+            this.tempData.historyData.push(common.clone(this.flowData));
             // 开始拖动 记录拖动数据
             this.tempData.dragData.nodeid = this.getMousePointNode(ev).id;
             this.tempData.dragData.sourceMouseX = ev.screenX;
@@ -363,18 +365,18 @@ export default {
             if (!node) return;
             let fromNode = node;
             let fromPoints = [
-                { x: fromNode.x, y: fromNode.y - fromNode.nodeHeight / 2 },
+                {x: fromNode.x, y: fromNode.y - fromNode.nodeHeight / 2},
                 {
                     x: fromNode.x,
-                    y: fromNode.y + fromNode.nodeHeight / 2
+                    y: fromNode.y + fromNode.nodeHeight / 2,
                 },
-                { x: fromNode.x - fromNode.nodeWidth / 2, y: fromNode.y },
+                {x: fromNode.x - fromNode.nodeWidth / 2, y: fromNode.y},
                 {
                     x: fromNode.x + fromNode.nodeWidth / 2,
-                    y: fromNode.y
-                }
+                    y: fromNode.y,
+                },
             ];
-            let toPoints = [{ x: ev.offsetX, y: ev.offsetY }];
+            let toPoints = [{x: ev.offsetX, y: ev.offsetY}];
             let lengArr = [];
             for (let i = 0; i < 4; i++) {
                 let fromPoint = fromPoints[i];
@@ -387,7 +389,7 @@ export default {
                     lengArr.push({
                         fromIndex: i,
                         toIndex: j,
-                        length: length
+                        length: length,
                     });
                 }
             }
@@ -412,26 +414,28 @@ export default {
                     !exists &&
                     this.tempData.connectLine.nodeId != targetNode.id
                 ) {
+                    // 添加到更改历史
+                    this.tempData.historyData.push(common.clone(this.flowData));
                     this.flowData.lines.push({
                         id: common.guid(),
                         from: this.tempData.connectLine.nodeId,
                         to: targetNode.id,
-                        text: ""
+                        text: '',
                     });
+                    this.tempData.connectLine = {
+                        path: null,
+                        nodeId: null,
+                    };
                 }
             }
-            this.tempData.connectLine = {
-                path: null,
-                nodeId: null
-            };
         },
         // 节点双击事件
         nodeDblClick(node) {
-            alert("nodeid:" + node.id);
+            alert('nodeid:' + node.id);
         },
         // 连接线双击事件
         lineDblClick(line) {
-            alert("lineid:" + line.id);
+            alert('lineid:' + line.id);
         },
         // 获取鼠标事件当前位置的节点
         getMousePointNode(ev) {
@@ -468,7 +472,7 @@ export default {
         },
         // 画布单击
         paperClick(ev) {
-            if (ev.target.id != "paper") return;
+            if (ev.target.id != 'paper') return;
             this.tempData.currentSelect.type = null;
             this.tempData.currentSelect.id = null;
             // 新增节点模式
@@ -479,8 +483,10 @@ export default {
                 this.tempData.mode.current == mode.addNode_subflow
             ) {
                 let $div = document.getElementById(this.tempData.mode.current);
-                let text = $div.getElementsByTagName("p")[0].innerText;
-                let nodeType = $div.getAttribute("nodetype");
+                let text = $div.getElementsByTagName('p')[0].innerText;
+                let nodeType = $div.getAttribute('nodetype');
+                // 添加到更改历史
+                this.tempData.historyData.push(common.clone(this.flowData));
                 this.flowData.nodes.push({
                     id: common.guid(),
                     type: nodeType,
@@ -488,7 +494,7 @@ export default {
                     x: ev.offsetX,
                     y: ev.offsetY,
                     nodeWidth: 100,
-                    nodeHeight: 50
+                    nodeHeight: 50,
                 });
             }
         },
@@ -498,6 +504,8 @@ export default {
                 this.tempData.currentSelect.id &&
                 this.tempData.currentSelect.type
             ) {
+                // 添加到更改历史
+                this.tempData.historyData.push(common.clone(this.flowData));
                 if (this.tempData.currentSelect.type == eleType.node) {
                     // 删除响应的连接线
                     this.flowData.lines.remove(
@@ -523,8 +531,9 @@ export default {
         },
         // 复制节点
         copy() {
-            if (this.tempData.currentSelect.type == eleType.node)
+            if (this.tempData.currentSelect.type == eleType.node) {
                 this.tempData.clipboard.nodeId = this.tempData.currentSelect.id;
+            }
         },
         // 粘贴
         paste() {
@@ -535,15 +544,23 @@ export default {
                 var cloneNode = common.clone(node);
                 cloneNode.x += 20;
                 cloneNode.y += 20;
-                cloneNode.id=common.guid();
+                cloneNode.id = common.guid();
+                // 添加到更改历史
+                this.tempData.historyData.push(common.clone(this.flowData));
                 this.flowData.nodes.push(cloneNode);
             }
         },
         // 撤销
-        undo(){
-
-        }
-    }
+        undo() {
+            if (this.tempData.historyData.length) {
+                let last = this.tempData.historyData.last();
+                if (last) {
+                    this.flowData = common.clone(last);
+                    this.tempData.historyData.pop();
+                }
+            }
+        },
+    },
 };
 </script>
 
@@ -570,7 +587,7 @@ export default {
         z-index: 10;
         top: 0;
         left: 0;
-        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIGlkPSJ2LTciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzIGlkPSJ2LTYiPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuXzAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHg9IjAiIHk9IjAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHJlY3QgaWQ9InYtOCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI0FBQUFBQSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgaWQ9InYtMTAiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGF0dGVybl8wKSIvPjwvc3ZnPg==");
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIGlkPSJ2LTciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzIGlkPSJ2LTYiPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuXzAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHg9IjAiIHk9IjAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHJlY3QgaWQ9InYtOCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI0FBQUFBQSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgaWQ9InYtMTAiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGF0dGVybl8wKSIvPjwvc3ZnPg==');
         text {
             text-anchor: middle;
             font-size: 14px;
