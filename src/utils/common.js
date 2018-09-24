@@ -54,7 +54,7 @@ const common = {
      * 获取第一个元素
      */
     Array.prototype.first = function () {
-      if (!this.length) return nulll;
+      if (!this.length) return null;
       return this[0];
     };
     
@@ -62,7 +62,7 @@ const common = {
      * 获取最后一个元素
      */
     Array.prototype.last = function () {
-      if (!this.length) return nulll;
+      if (!this.length) return null;
       return this[this.length - 1];
     };
 

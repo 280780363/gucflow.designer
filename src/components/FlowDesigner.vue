@@ -64,7 +64,9 @@
                 <path :d="tempData.connectLine.path" v-if="tempData.connectLine.path" fill="none" class="unselect" stroke-width="2" marker-end="url(#arrow-unselect)" />
             </svg>
         </div>
+        <div style="color:#e6e6e6">ctrl+c,ctrl+v:复制粘贴,ctrl+z:撤销,delete:删除</div>
     </div>
+
 </template>
 <script>
 import common from '../utils/common.js';
