@@ -540,10 +540,10 @@ export default {
         // 粘贴
         paste() {
             if (this.tempData.clipboard.nodeId) {
-                var node = this.flowData.nodes.find(
+                let node = this.flowData.nodes.find(
                     r => r.id == this.tempData.clipboard.nodeId
                 );
-                var cloneNode = common.clone(node);
+                let cloneNode = common.clone(node);
                 cloneNode.x += 20;
                 cloneNode.y += 20;
                 cloneNode.id = common.guid();
